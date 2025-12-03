@@ -13,6 +13,12 @@ A super lightweight Android TV launcher optimized for minimal RAM and CPU usage.
 - **Smart Caching**: Icon cache prevents reloading the same icons
 - **Background Optimization**: Automatically unloads resources when backgrounded
 
+## Download
+
+Pre-built APK files are available in the repository:
+- **Latest Release**: Download `app/build/outputs/apk/debug/app-debug.apk` from the repository
+- The APK is included in the repository for easy installation
+
 ## How to Use
 
 1. **Install the APK** on your Android TV device
@@ -47,9 +53,13 @@ The APK will be generated in `app/build/outputs/apk/debug/`
 
 ## Installation
 
-1. Enable "Unknown Sources" in Android TV settings
-2. Install the APK using ADB or a file manager
-3. The launcher will appear in your apps list
+1. **Download the APK**: Get `app/build/outputs/apk/debug/app-debug.apk` from this repository
+2. **Enable "Unknown Sources"** in Android TV settings (Settings → Security & restrictions → Unknown sources)
+3. **Install the APK** using one of these methods:
+   - **ADB**: `adb install app-debug.apk`
+   - **File Manager**: Transfer APK to TV and open with a file manager
+   - **Network Share**: Share APK over network and access from TV
+4. The launcher will appear in your apps list
 
 ## Permissions
 
