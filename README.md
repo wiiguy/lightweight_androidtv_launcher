@@ -31,10 +31,38 @@ Pre-built APK files are available in the repository:
 
 ## Building
 
-To build the project:
+### Prerequisites
+
+This project requires Gradle to be installed on your system. The Gradle wrapper is not included in this repository.
+
+#### Installing Gradle
+
+**Option 1: Using a Package Manager**
+
+- **Linux (Ubuntu/Debian)**: `sudo apt install gradle`
+- **macOS (Homebrew)**: `brew install gradle`
+- **Windows (Chocolatey)**: `choco install gradle`
+
+**Option 2: Manual Installation**
+
+1. Download Gradle from: https://gradle.org/releases/
+2. Extract the archive
+3. Add `GRADLE_HOME/bin` to your system PATH
+4. Verify installation: `gradle --version`
+
+**Option 3: Using SDKMAN (Linux/macOS)**
 
 ```bash
-./gradlew assembleDebug
+curl -s "https://get.sdkman.io" | bash
+sdk install gradle
+```
+
+### Building the Project
+
+Once Gradle is installed, build the project:
+
+```bash
+gradle assembleDebug
 ```
 
 The APK will be generated in `app/build/outputs/apk/debug/`
