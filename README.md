@@ -22,7 +22,7 @@ Pre-built APK files are available in the repository:
 ## How to Use
 
 1. **Install the APK** on your Android TV device
-2. **Set as Default Launcher** (if desired) in Android TV settings
+2. **Set as Default Launcher** (if desired) - see [Setting as Default Launcher](#setting-as-default-launcher-boot-startup) section below for ADB instructions
 3. **Add Apps**: 
    - Press the "+" button on an empty slot
    - Browse apps in the grid selection screen
@@ -88,6 +88,38 @@ The APK will be generated in `app/build/outputs/apk/debug/`
    - **File Manager**: Transfer APK to TV and open with a file manager
    - **Network Share**: Share APK over network and access from TV
 4. The launcher will appear in your apps list
+
+## Setting as Default Launcher (Boot Startup)
+
+To make the launcher start automatically at boot and become the default home screen, use ADB:
+
+1. **Connect to your TV via ADB**:
+   ```bash
+   adb connect <TV_IP_ADDRESS>
+   ```
+
+2. **Enable the launcher component**:
+   ```bash
+   adb shell pm enable com.tvlauncher/.MainActivity
+   ```
+
+3. **Set as default home launcher**:
+   ```bash
+   adb shell cmd package set-home-activity com.tvlauncher/.MainActivity
+   ```
+
+4. **Verify the setting**:
+   ```bash
+   adb shell cmd package get-home-activities
+   ```
+   You should see `com.tvlauncher/.MainActivity` listed as the default.
+
+5. **Test by pressing the Home button** on your TV remote - the launcher should appear.
+
+**Note**: After setting as default, the launcher will automatically start when the TV boots up. To revert to the original launcher, you can use:
+```bash
+adb shell cmd package set-home-activity <original_launcher_package>/<original_launcher_activity>
+```
 
 ## Permissions
 
