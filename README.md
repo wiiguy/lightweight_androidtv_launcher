@@ -107,8 +107,8 @@ The APK will be generated in `app/build/outputs/apk/debug/`
 
 ## Performance Metrics
 
-- **RAM Usage (PSS)**: ~45MB when active, ~45MB when backgrounded
-- **CPU Usage**: ~0% when idle, minimal when backgrounded
+- **RAM Usage (PSS)**: ~45MB when active, ~40MB when backgrounded
+- **CPU Usage**: ~0% when idle, 0% when backgrounded
 - **Memory Efficiency**: Optimized for budget Android TV devices with aggressive cache management
 
 ## Installation
