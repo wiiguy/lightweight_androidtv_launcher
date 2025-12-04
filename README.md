@@ -48,7 +48,7 @@ Done! Press Home on your TV remote to see the launcher.
 ## Download
 
 Pre-built APK files are available in the repository:
-- **Latest Release**: Download `app/build/outputs/apk/debug/app-debug.apk` from the repository
+- **Latest Release**: [Download APK](https://github.com/wiiguy/lightweight_androidtv_launcher/blob/main/app/build/outputs/apk/debug/app-debug.apk) (direct download)
 - The APK is included in the repository for easy installation
 
 ## How to Use
