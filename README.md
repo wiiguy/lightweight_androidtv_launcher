@@ -6,7 +6,7 @@ A super lightweight Android TV launcher optimized for minimal RAM and CPU usage.
 
 **Quick Installation & Setup:**
 
-1. **Download**: Get `app/build/outputs/apk/debug/app-debug.apk` from this repository
+1. **Download**: [Download APK](https://github.com/wiiguy/lightweight_androidtv_launcher/blob/main/app/build/outputs/apk/debug/app-debug.apk) from this repository
 2. **Install**: `adb connect <TV_IP>:5555 && adb install app-debug.apk`
 3. **Set as Default**: `adb shell pm enable com.tvlauncher/.MainActivity && adb shell cmd package set-home-activity com.tvlauncher/.MainActivity`
 
