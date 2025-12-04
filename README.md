@@ -114,7 +114,7 @@ The APK will be generated in `app/build/outputs/apk/debug/`
 
 ## Installation
 
-1. **Download the APK**: Get `app/build/outputs/apk/debug/app-debug.apk` from this repository
+1. **Download the APK**: [Download APK](https://github.com/wiiguy/lightweight_androidtv_launcher/blob/main/app/build/outputs/apk/debug/app-debug.apk) from this repository
 2. **Enable "Unknown Sources"** in Android TV settings (Settings → Security & restrictions → Unknown sources)
 3. **Install the APK** using one of these methods:
 
