@@ -57,6 +57,9 @@ class MainActivity : AppCompatActivity() {
         appSlots.layoutManager = layoutManager
         appSlots.adapter = appSlotAdapter
         appSlots.setHasFixedSize(true)
+        // Reduce RecyclerView cache sizes for lower memory usage
+        appSlots.setItemViewCacheSize(2)
+        appSlots.recycledViewPool.setMaxRecycledViews(0, 2)
     }
     
     private fun setupClickListeners() {
@@ -134,6 +137,8 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         stopClock()
+        // Clear cache when paused to free memory
+        appManager.clearCache()
         // Allow the TV to go to sleep properly
     }
     

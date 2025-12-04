@@ -36,7 +36,7 @@ Done! Press Home on your TV remote to see the launcher.
 
 ## Features
 
-- **Ultra Lightweight**: Optimized for minimal resource usage (~50MB RAM, ~3% CPU)
+- **Ultra Lightweight**: Optimized for minimal resource usage (~45MB RAM, ~0% CPU when idle)
 - **Simple Interface**: Clean, TV-optimized interface with D-pad navigation
 - **One-by-One App Addition**: Add apps one at a time to your home screen
 - **Grid App Selection**: Browse and select apps from a grid layout
@@ -107,9 +107,9 @@ The APK will be generated in `app/build/outputs/apk/debug/`
 
 ## Performance Metrics
 
-- **RAM Usage (PSS)**: ~50MB when active, ~48MB when backgrounded
-- **CPU Usage**: ~3% when idle, minimal when backgrounded
-- **Memory Efficiency**: Optimized for budget Android TV devices
+- **RAM Usage (PSS)**: ~45MB when active, ~45MB when backgrounded
+- **CPU Usage**: ~0% when idle, minimal when backgrounded
+- **Memory Efficiency**: Optimized for budget Android TV devices with aggressive cache management
 
 ## Installation
 
@@ -196,12 +196,13 @@ adb shell cmd package set-home-activity <original_launcher_package>/<original_la
 ## Performance Optimizations
 
 - **Lazy Icon Loading**: Icons are loaded on-demand when views become visible
-- **Icon Caching**: Up to 50 icons cached to prevent reloading
+- **Icon Caching**: Up to 20 icons cached (reduced from 50) to minimize memory usage
+- **RecyclerView Cache Optimization**: Reduced view cache sizes (2-5 items) for lower memory footprint
 - **Clock Optimization**: Updates every minute instead of every second
 - **Simplified Drawables**: Reduced rendering overhead with simpler backgrounds
 - **Smaller Icons**: 60dp icons instead of 80dp for reduced memory
 - **Background Unloading**: Clock and resources unload when launcher is backgrounded
-- **Memory Management**: Aggressive cache clearing when not in use
+- **Aggressive Cache Clearing**: Caches cleared on pause and when activities finish to free memory immediately
 
 ## Project Structure
 

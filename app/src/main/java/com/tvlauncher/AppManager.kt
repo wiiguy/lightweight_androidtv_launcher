@@ -146,7 +146,7 @@ class AppManager(private val context: Context) {
     }
     
     fun cacheIcon(packageName: String, icon: android.graphics.drawable.Drawable) {
-        if (iconCache.size < 50) { // Limit cache size
+        if (iconCache.size < 20) { // Reduced cache size for lower memory usage
             iconCache[packageName] = icon
         }
     }

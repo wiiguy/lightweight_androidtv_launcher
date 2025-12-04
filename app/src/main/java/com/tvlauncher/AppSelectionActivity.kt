@@ -14,7 +14,6 @@ class AppSelectionActivity : AppCompatActivity() {
     private lateinit var appManager: AppManager
     private lateinit var appSelectionAdapter: AppSelectionAdapter
     private val selectedApps = mutableSetOf<String>()
-    private var isProcessingSelection = false
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,17 +35,9 @@ class AppSelectionActivity : AppCompatActivity() {
             allApps,
             selectedApps
         ) { packageName, isSelected ->
-            // Prevent rapid successive selections
-            if (isProcessingSelection) {
-                return@AppSelectionAdapter
-            }
-            
+            // Just update the selection set, don't save or finish yet
             if (isSelected) {
-                isProcessingSelection = true
                 selectedApps.add(packageName)
-                appManager.saveSelectedApps(selectedApps)
-                setResult(RESULT_OK)
-                finish()
             } else {
                 selectedApps.remove(packageName)
             }
@@ -56,13 +47,25 @@ class AppSelectionActivity : AppCompatActivity() {
         val spanCount = calculateSpanCount()
         appList.layoutManager = GridLayoutManager(this@AppSelectionActivity, spanCount)
         appList.adapter = appSelectionAdapter
+        // Reduce RecyclerView cache sizes for lower memory usage
+        appList.setItemViewCacheSize(5)
+        appList.recycledViewPool.setMaxRecycledViews(0, 5)
     }
     
     private fun setupClickListeners() {
         doneButton.setOnClickListener {
             appManager.saveSelectedApps(selectedApps)
+            // Clear cache before finishing to free memory
+            appManager.clearCache()
+            setResult(RESULT_OK)
             finish()
         }
+    }
+    
+    override fun onPause() {
+        super.onPause()
+        // Clear cache when paused to free memory
+        appManager.clearCache()
     }
     
     private fun calculateSpanCount(): Int {
