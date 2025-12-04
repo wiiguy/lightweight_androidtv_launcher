@@ -2,6 +2,38 @@
 
 A super lightweight Android TV launcher optimized for minimal RAM and CPU usage. Allows you to customize your home screen with your favorite apps.
 
+## TL;DR
+
+**Quick Installation & Setup:**
+
+1. **Download**: Get `app/build/outputs/apk/debug/app-debug.apk` from this repository
+2. **Install**: `adb connect <TV_IP>:5555 && adb install app-debug.apk`
+3. **Set as Default**: `adb shell pm enable com.tvlauncher/.MainActivity && adb shell cmd package set-home-activity com.tvlauncher/.MainActivity`
+
+Done! Press Home on your TV remote to see the launcher.
+
+## Table of Contents
+
+- [Features](#features)
+- [TL;DR](#tldr)
+- [Download](#download)
+- [How to Use](#how-to-use)
+- [Installation](#installation)
+  - [Method 1: ADB Installation (Recommended)](#method-1-adb-installation-recommended)
+  - [Method 2: File Manager](#method-2-file-manager)
+  - [Method 3: Network Share](#method-3-network-share)
+- [Setting as Default Launcher (Boot Startup)](#setting-as-default-launcher-boot-startup)
+- [Building](#building)
+  - [Prerequisites](#prerequisites)
+  - [Installing Gradle](#installing-gradle)
+  - [Building the Project](#building-the-project)
+- [Requirements](#requirements)
+- [Performance Metrics](#performance-metrics)
+- [Permissions](#permissions)
+- [Performance Optimizations](#performance-optimizations)
+- [Project Structure](#project-structure)
+- [Customization](#customization)
+
 ## Features
 
 - **Ultra Lightweight**: Optimized for minimal resource usage (~50MB RAM, ~3% CPU)
