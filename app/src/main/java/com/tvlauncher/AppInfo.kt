@@ -32,7 +32,3 @@ data class AppInfo(
     }
 }
 
-
-
-
-

@@ -124,7 +124,6 @@ class MainActivity : AppCompatActivity() {
     
     private fun openAppSelection(slotPosition: Int) {
         val intent = Intent(this, AppSelectionActivity::class.java)
-        intent.putExtra("slot_position", slotPosition)
         startActivity(intent)
     }
     

@@ -68,20 +68,12 @@ class AppSlotAdapter(
         notifyDataSetChanged()
     }
     
-    fun addAppToSlot(position: Int, appInfo: AppInfo) {
-        if (position < slots.size) {
-            slots[position] = AppSlot(appInfo, false)
-            notifyItemChanged(position)
-        }
-    }
-    
     companion object {
         const val MAX_SLOTS = 8
     }
     
     fun getMaxSlots(): Int = MAX_SLOTS
-    
-    
+
     private fun launchApp(context: android.content.Context, packageName: String) {
         try {
             val launchIntent = context.packageManager.getLaunchIntentForPackage(packageName)

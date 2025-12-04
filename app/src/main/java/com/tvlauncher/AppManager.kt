@@ -97,8 +97,7 @@ class AppManager(private val context: Context) {
                packageName.contains("android") ||
                packageName.contains("tv")
     }
-    
-    
+
     fun getSelectedApps(): Set<String> {
         if (cachedSelectedApps != null) {
             return cachedSelectedApps!!
