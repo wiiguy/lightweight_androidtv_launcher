@@ -69,24 +69,25 @@ This project requires Gradle to be installed on your system. The Gradle wrapper 
 
 #### Installing Gradle
 
-**Option 1: Using a Package Manager**
+**Note**: Package managers (apt, brew, etc.) often install outdated Gradle versions. This project requires Gradle 8.0+ (tested with 8.5).
 
-- **Linux (Ubuntu/Debian)**: `sudo apt install gradle`
-- **macOS (Homebrew)**: `brew install gradle`
-- **Windows (Chocolatey)**: `choco install gradle`
+**Option 1: Manual Installation (Recommended)**
 
-**Option 2: Manual Installation**
+1. Download Gradle 8.5+ from: https://gradle.org/releases/
+2. Extract the archive to a location like `~/gradle/gradle-8.5` or `/opt/gradle/gradle-8.5`
+3. Add to your `~/.bashrc` (or `~/.zshrc`):
+   ```bash
+   export GRADLE_HOME=$HOME/gradle/gradle-8.5
+   export PATH=$GRADLE_HOME/bin:$PATH
+   ```
+4. Reload your shell: `source ~/.bashrc`
+5. Verify installation: `gradle --version`
 
-1. Download Gradle from: https://gradle.org/releases/
-2. Extract the archive
-3. Add `GRADLE_HOME/bin` to your system PATH
-4. Verify installation: `gradle --version`
-
-**Option 3: Using SDKMAN (Linux/macOS)**
+**Option 2: Using SDKMAN (Linux/macOS)**
 
 ```bash
 curl -s "https://get.sdkman.io" | bash
-sdk install gradle
+sdk install gradle 8.5
 ```
 
 ### Building the Project
