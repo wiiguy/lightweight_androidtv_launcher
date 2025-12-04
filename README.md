@@ -84,10 +84,45 @@ The APK will be generated in `app/build/outputs/apk/debug/`
 1. **Download the APK**: Get `app/build/outputs/apk/debug/app-debug.apk` from this repository
 2. **Enable "Unknown Sources"** in Android TV settings (Settings → Security & restrictions → Unknown sources)
 3. **Install the APK** using one of these methods:
-   - **ADB**: `adb install app-debug.apk`
-   - **File Manager**: Transfer APK to TV and open with a file manager
-   - **Network Share**: Share APK over network and access from TV
-4. The launcher will appear in your apps list
+
+### Method 1: ADB Installation (Recommended)
+
+This is the easiest method if you have ADB set up:
+
+1. **Connect to your TV via ADB**:
+   ```bash
+   adb connect <TV_IP_ADDRESS>:5555
+   ```
+   (Replace `<TV_IP_ADDRESS>` with your TV's IP address)
+
+2. **Install the APK**:
+   ```bash
+   adb install app/build/outputs/apk/debug/app-debug.apk
+   ```
+   Or if you've already downloaded the APK to your current directory:
+   ```bash
+   adb install app-debug.apk
+   ```
+
+3. **Verify installation**:
+   ```bash
+   adb shell pm list packages | grep tvlauncher
+   ```
+   You should see `package:com.tvlauncher` in the output.
+
+### Method 2: File Manager
+
+1. Transfer the APK to your TV using a USB drive, network share, or file transfer app
+2. Open the APK file using a file manager on your TV
+3. Follow the on-screen installation prompts
+
+### Method 3: Network Share
+
+1. Share the APK over your local network (e.g., via SMB, FTP, or HTTP server)
+2. Access the shared file from your TV using a file manager or browser
+3. Download and install the APK
+
+After installation, the launcher will appear in your apps list.
 
 ## Setting as Default Launcher (Boot Startup)
 
