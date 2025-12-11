@@ -37,7 +37,7 @@ Done! Press Home on your TV remote to see the launcher.
 ## Features
 
 - **Ultra Lightweight**: Optimized for minimal resource usage (~42MB RAM active, ~27MB backgrounded)
-- **Small APK Size**: Release build is only 954 KB (vs 3.7 MB debug build)
+- **Small APK Size**: Only 954 KB - optimized and minified
 - **Simple Interface**: Clean, TV-optimized interface with D-pad navigation
 - **Multiple App Selection**: Select multiple apps before saving
 - **Grid App Selection**: Browse and select apps from a grid layout
@@ -48,12 +48,9 @@ Done! Press Home on your TV remote to see the launcher.
 
 ## Download
 
-Pre-built APK files are available in the repository:
+Pre-built APK available in the repository:
 
-- **Latest Release (Recommended)**: [Download Release APK](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app-release.apk) (954 KB - optimized, minified, and signed)
-- **Debug Build**: [Download Debug APK](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app/build/outputs/apk/debug/app-debug.apk) (3.7 MB - for development/testing)
-
-**Note**: The release build is recommended for production use as it's 75% smaller and optimized for performance.
+- **Download APK**: [Download Release APK](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app-release.apk) (954 KB - optimized, minified, and signed)
 
 ## How to Use
 
@@ -97,13 +94,7 @@ sdk install gradle 8.5
 
 ### Building the Project
 
-**Debug Build:**
-```bash
-gradle assembleDebug
-```
-The APK will be generated in `app/build/outputs/apk/debug/app-debug.apk` (3.7 MB)
-
-**Release Build (Recommended):**
+**Release Build:**
 ```bash
 gradle assembleRelease
 ```
@@ -125,24 +116,14 @@ The release build includes:
 
 ## Performance Metrics
 
-### Release Build (Recommended)
-
 - **RAM Usage (PSS)**: ~42.3 MB when active, ~26.8 MB when backgrounded
 - **CPU Usage**: ~0% when idle, 0% when backgrounded
-- **APK Size**: 954 KB (75% smaller than debug build)
+- **APK Size**: 954 KB
 - **Memory Efficiency**: Optimized for budget Android TV devices with aggressive cache management
-
-### Debug Build
-
-- **RAM Usage (PSS)**: ~30 MB when active, ~40 MB when backgrounded
-- **CPU Usage**: ~0% when idle
-- **APK Size**: 3.7 MB
-
-**Note**: The release build uses slightly more RAM when active due to R8 optimizations, but is significantly more efficient when backgrounded and has a much smaller APK size.
 
 ## Installation
 
-1. **Download the APK**: [Download Release APK](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app-release.apk) (recommended) or [Download Debug APK](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app/build/outputs/apk/debug/app-debug.apk)
+1. **Download the APK**: [Download Release APK](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app-release.apk)
 2. **Enable "Unknown Sources"** in Android TV settings (Settings → Security & restrictions → Unknown sources)
 3. **Install the APK** using one of these methods:
 
@@ -233,7 +214,7 @@ adb shell cmd package set-home-activity <original_launcher_package>/<original_la
 - **Smaller Icons**: 60dp icons instead of 80dp for reduced memory
 - **Background Unloading**: Clock and resources unload when launcher is backgrounded
 - **Aggressive Cache Clearing**: Caches cleared on pause and when activities finish to free memory immediately
-- **Release Build Optimizations**: R8 code shrinking, resource optimization, and minification reduce APK size by 75%
+- **Release Build Optimizations**: R8 code shrinking, resource optimization, and minification for optimal performance
 
 ## Project Structure
 
