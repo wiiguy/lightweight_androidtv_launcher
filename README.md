@@ -6,8 +6,8 @@ A super lightweight Android TV launcher optimized for minimal RAM and CPU usage.
 
 **Quick Installation & Setup:**
 
-1. **Download**: [Download APK](https://github.com/wiiguy/lightweight_androidtv_launcher/blob/main/app/build/outputs/apk/debug/app-debug.apk) from this repository
-2. **Install**: `adb connect <TV_IP>:5555 && adb install app-debug.apk`
+1. **Download**: [Download Release APK](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app-release.apk) (954 KB - optimized release build)
+2. **Install**: `adb connect <TV_IP>:5555 && adb install app-release.apk`
 3. **Set as Default**: `adb shell pm enable com.tvlauncher/.MainActivity && adb shell cmd package set-home-activity com.tvlauncher/.MainActivity`
 
 Done! Press Home on your TV remote to see the launcher.
@@ -36,11 +36,12 @@ Done! Press Home on your TV remote to see the launcher.
 
 ## Features
 
-- **Ultra Lightweight**: Optimized for minimal resource usage (~45MB RAM, ~0% CPU when idle)
+- **Ultra Lightweight**: Optimized for minimal resource usage (~42MB RAM active, ~27MB backgrounded)
+- **Small APK Size**: Release build is only 954 KB (vs 3.7 MB debug build)
 - **Simple Interface**: Clean, TV-optimized interface with D-pad navigation
-- **One-by-One App Addition**: Add apps one at a time to your home screen
+- **Multiple App Selection**: Select multiple apps before saving
 - **Grid App Selection**: Browse and select apps from a grid layout
-- **Digital Clock**: Displays current time in the top-left corner
+- **Digital Clock**: Displays current time in the top-left corner (updates every minute)
 - **Lazy Icon Loading**: Icons load only when visible, reducing memory usage
 - **Smart Caching**: Icon cache prevents reloading the same icons
 - **Background Optimization**: Automatically unloads resources when backgrounded
@@ -48,8 +49,11 @@ Done! Press Home on your TV remote to see the launcher.
 ## Download
 
 Pre-built APK files are available in the repository:
-- **Latest Release**: [Download APK](https://github.com/wiiguy/lightweight_androidtv_launcher/blob/main/app/build/outputs/apk/debug/app-debug.apk) (direct download)
-- The APK is included in the repository for easy installation
+
+- **Latest Release (Recommended)**: [Download Release APK](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app-release.apk) (954 KB - optimized, minified, and signed)
+- **Debug Build**: [Download Debug APK](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app/build/outputs/apk/debug/app-debug.apk) (3.7 MB - for development/testing)
+
+**Note**: The release build is recommended for production use as it's 75% smaller and optimized for performance.
 
 ## How to Use
 
@@ -58,7 +62,8 @@ Pre-built APK files are available in the repository:
 3. **Add Apps**: 
    - Press the "+" button on an empty slot
    - Browse apps in the grid selection screen
-   - Select an app to add it to that slot
+   - Select multiple apps (they'll be highlighted)
+   - Press "Done" to save all selected apps to the slot
 4. **Launch Apps**: Navigate to any app on the home screen and press the center button to launch it
 
 ## Building
@@ -92,13 +97,25 @@ sdk install gradle 8.5
 
 ### Building the Project
 
-Once Gradle is installed, build the project:
-
+**Debug Build:**
 ```bash
 gradle assembleDebug
 ```
+The APK will be generated in `app/build/outputs/apk/debug/app-debug.apk` (3.7 MB)
 
-The APK will be generated in `app/build/outputs/apk/debug/`
+**Release Build (Recommended):**
+```bash
+gradle assembleRelease
+```
+The APK will be generated in `app/build/outputs/apk/release/app-release.apk` (954 KB)
+
+The release build includes:
+- Code minification and optimization (R8)
+- Resource shrinking
+- Debug symbol removal
+- Signing with debug keystore (for testing)
+
+**Note**: For production releases, you should configure a proper signing key in `app/build.gradle` instead of using the debug keystore.
 
 ## Requirements
 
@@ -108,13 +125,24 @@ The APK will be generated in `app/build/outputs/apk/debug/`
 
 ## Performance Metrics
 
-- **RAM Usage (PSS)**: ~45MB when active, ~40MB when backgrounded
+### Release Build (Recommended)
+
+- **RAM Usage (PSS)**: ~42.3 MB when active, ~26.8 MB when backgrounded
 - **CPU Usage**: ~0% when idle, 0% when backgrounded
+- **APK Size**: 954 KB (75% smaller than debug build)
 - **Memory Efficiency**: Optimized for budget Android TV devices with aggressive cache management
+
+### Debug Build
+
+- **RAM Usage (PSS)**: ~30 MB when active, ~40 MB when backgrounded
+- **CPU Usage**: ~0% when idle
+- **APK Size**: 3.7 MB
+
+**Note**: The release build uses slightly more RAM when active due to R8 optimizations, but is significantly more efficient when backgrounded and has a much smaller APK size.
 
 ## Installation
 
-1. **Download the APK**: [Download APK](https://github.com/wiiguy/lightweight_androidtv_launcher/blob/main/app/build/outputs/apk/debug/app-debug.apk) from this repository
+1. **Download the APK**: [Download Release APK](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app-release.apk) (recommended) or [Download Debug APK](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app/build/outputs/apk/debug/app-debug.apk)
 2. **Enable "Unknown Sources"** in Android TV settings (Settings → Security & restrictions → Unknown sources)
 3. **Install the APK** using one of these methods:
 
@@ -130,12 +158,13 @@ This is the easiest method if you have ADB set up:
 
 2. **Install the APK**:
    ```bash
-   adb install app/build/outputs/apk/debug/app-debug.apk
+   adb install app-release.apk
    ```
-   Or if you've already downloaded the APK to your current directory:
+   Or if you've downloaded the APK to your current directory:
    ```bash
-   adb install app-debug.apk
+   adb install -r app-release.apk
    ```
+   (The `-r` flag replaces any existing installation)
 
 3. **Verify installation**:
    ```bash
@@ -163,7 +192,7 @@ To make the launcher start automatically at boot and become the default home scr
 
 1. **Connect to your TV via ADB**:
    ```bash
-   adb connect <TV_IP_ADDRESS>
+   adb connect <TV_IP_ADDRESS>:5555
    ```
 
 2. **Enable the launcher component**:
@@ -204,11 +233,12 @@ adb shell cmd package set-home-activity <original_launcher_package>/<original_la
 - **Smaller Icons**: 60dp icons instead of 80dp for reduced memory
 - **Background Unloading**: Clock and resources unload when launcher is backgrounded
 - **Aggressive Cache Clearing**: Caches cleared on pause and when activities finish to free memory immediately
+- **Release Build Optimizations**: R8 code shrinking, resource optimization, and minification reduce APK size by 75%
 
 ## Project Structure
 
 - `MainActivity`: Home screen with app slots and clock
-- `AppSelectionActivity`: Grid-based app selection interface
+- `AppSelectionActivity`: Grid-based app selection interface with multiple selection support
 - `AppManager`: Handles app discovery, storage, and icon caching
 - `AppSlotAdapter`: RecyclerView adapter for app slots on home screen
 - `AppSelectionAdapter`: RecyclerView adapter for app selection grid
@@ -220,8 +250,3 @@ The launcher uses a simple design that can be easily customized by modifying:
 - Colors in `res/values/colors.xml`
 - Layouts in `res/layout/`
 - Themes in `res/values/themes.xml`
-
-
-
-
-

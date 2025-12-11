@@ -15,6 +15,12 @@ android {
         versionName "1.0"
     }
 
+    signingConfigs {
+        debug {
+            // Use default debug keystore
+        }
+    }
+
     buildTypes {
         debug {
             minifyEnabled false
@@ -24,6 +30,7 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug // Use debug signing for testing
         }
     }
     compileOptions {
