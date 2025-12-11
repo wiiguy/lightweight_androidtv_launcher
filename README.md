@@ -6,29 +6,29 @@ A super lightweight Android TV launcher optimized for minimal RAM and CPU usage.
 
 **Quick Installation & Setup:**
 
-1. **Download**: [Download Release APK](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app-release.apk) (954 KB - optimized release build)
-2. **Install**: `adb connect <TV_IP>:5555 && adb install app-release.apk`
-3. **Set as Default**: `adb shell pm enable com.tvlauncher/.MainActivity && adb shell cmd package set-home-activity com.tvlauncher/.MainActivity`
+1. **Download**: [Download Release APK](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app-release.apk) (1.9 MB - optimized release build)
+2. **Install**: `adb connect <TV_IP>:5555 && adb install -r app-release.apk`
+3. **Set as Default**: `adb shell cmd package set-home-activity com.tvlauncher/.MainActivity`
 
 Done! Press Home on your TV remote to see the launcher.
 
 ## Table of Contents
 
 - [Features](#features)
-- [TL;DR](#tldr)
+- [Screenshots](#screenshots)
 - [Download](#download)
-- [How to Use](#how-to-use)
 - [Installation](#installation)
   - [Method 1: ADB Installation (Recommended)](#method-1-adb-installation-recommended)
   - [Method 2: File Manager](#method-2-file-manager)
   - [Method 3: Network Share](#method-3-network-share)
-- [Setting as Default Launcher (Boot Startup)](#setting-as-default-launcher-boot-startup)
+- [Setting as Default Launcher](#setting-as-default-launcher)
+- [How to Use](#how-to-use)
+- [Performance Metrics](#performance-metrics)
 - [Building](#building)
   - [Prerequisites](#prerequisites)
   - [Installing Gradle](#installing-gradle)
   - [Building the Project](#building-the-project)
 - [Requirements](#requirements)
-- [Performance Metrics](#performance-metrics)
 - [Permissions](#permissions)
 - [Performance Optimizations](#performance-optimizations)
 - [Project Structure](#project-structure)
@@ -36,8 +36,8 @@ Done! Press Home on your TV remote to see the launcher.
 
 ## Features
 
-- **Ultra Lightweight**: Optimized for minimal resource usage (~42MB RAM active, ~27MB backgrounded)
-- **Small APK Size**: Only 954 KB - optimized and minified
+- **Ultra Lightweight**: Optimized for minimal resource usage (~40MB RAM active, ~27MB backgrounded)
+- **Small APK Size**: Only 1.9 MB - optimized and minified
 - **Simple Interface**: Clean, TV-optimized interface with D-pad navigation
 - **Multiple App Selection**: Select multiple apps before saving
 - **Grid App Selection**: Browse and select apps from a grid layout
@@ -45,23 +45,108 @@ Done! Press Home on your TV remote to see the launcher.
 - **Lazy Icon Loading**: Icons load only when visible, reducing memory usage
 - **Smart Caching**: Icon cache prevents reloading the same icons
 - **Background Optimization**: Automatically unloads resources when backgrounded
+- **Settings Access**: Quick access to Android TV settings
+
+## Screenshots
+
+### Home Screen
+![Home Screen](screenshot_home_screen.png)
+
+The main launcher interface showing app slots with a digital clock in the top-left corner and a settings button in the top-right.
+
+### App Selection Screen
+![App Selection Screen](screenshot_add_apps_window.png)
+
+Browse and select multiple apps from a grid layout. Click the "+" button on an empty slot to add apps.
 
 ## Download
 
 Pre-built APK available in the repository:
 
-- **Download APK**: [Download Release APK](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app-release.apk) (954 KB - optimized, minified, and signed)
+- **Download APK**: [Download Release APK](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app-release.apk) (1.9 MB - optimized, minified, and signed)
+
+## Installation
+
+1. **Download the APK**: [Download Release APK](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app-release.apk)
+2. **Enable "Unknown Sources"** in Android TV settings (Settings → Security & restrictions → Unknown sources)
+3. **Install the APK** using one of these methods:
+
+### Method 1: ADB Installation (Recommended)
+
+This is the easiest method if you have ADB set up:
+
+1. **Connect to your TV via ADB**:
+   ```bash
+   adb connect <TV_IP_ADDRESS>:5555
+   ```
+   (Replace `<TV_IP_ADDRESS>` with your TV's IP address)
+
+2. **Install the APK**:
+   ```bash
+   adb install -r app-release.apk
+   ```
+   (The `-r` flag replaces any existing installation)
+
+3. **Verify installation**:
+   ```bash
+   adb shell pm list packages | grep tvlauncher
+   ```
+   You should see `package:com.tvlauncher` in the output.
+
+### Method 2: File Manager
+
+1. Transfer the APK to your TV using a USB drive, network share, or file transfer app
+2. Open the APK file using a file manager on your TV
+3. Follow the on-screen installation prompts
+
+### Method 3: Network Share
+
+1. Share the APK over your local network (e.g., via SMB, FTP, or HTTP server)
+2. Access the shared file from your TV using a file manager or browser
+3. Download and install the APK
+
+After installation, the launcher will appear in your apps list.
+
+## Setting as Default Launcher
+
+To make the launcher start automatically at boot and become the default home screen, use ADB:
+
+1. **Connect to your TV via ADB**:
+   ```bash
+   adb connect <TV_IP_ADDRESS>:5555
+   ```
+
+2. **Set as default home launcher**:
+   ```bash
+   adb shell cmd package set-home-activity com.tvlauncher/.MainActivity
+   ```
+
+3. **Test by pressing the Home button** on your TV remote - the launcher should appear.
+
+**Note**: After setting as default, the launcher will automatically start when the TV boots up. To revert to the original launcher, you can use:
+```bash
+adb shell cmd package set-home-activity <original_launcher_package>/<original_launcher_activity>
+```
 
 ## How to Use
 
-1. **Install the APK** on your Android TV device
-2. **Set as Default Launcher** (if desired) - see [Setting as Default Launcher](#setting-as-default-launcher-boot-startup) section below for ADB instructions
+1. **Install the APK** on your Android TV device (see [Installation](#installation))
+2. **Set as Default Launcher** (if desired) - see [Setting as Default Launcher](#setting-as-default-launcher) section above
 3. **Add Apps**: 
-   - Press the "+" button on an empty slot
+   - Navigate to an empty slot (shows "+" button) on the home screen
+   - Press the center button (DPAD_CENTER) on the "+" button
    - Browse apps in the grid selection screen
-   - Select multiple apps (they'll be highlighted)
-   - Press "Done" to save all selected apps to the slot
+   - Use DPAD to navigate and select multiple apps (they'll be highlighted when selected)
+   - Press "Done" button to save all selected apps to the slot
 4. **Launch Apps**: Navigate to any app on the home screen and press the center button to launch it
+5. **Access Settings**: Press the "SETTINGS" button in the top-right corner to open Android TV settings
+
+## Performance Metrics
+
+- **RAM Usage (PSS)**: ~40 MB when active, ~27 MB when backgrounded
+- **CPU Usage**: ~0% when idle, 0% when backgrounded
+- **APK Size**: 1.9 MB
+- **Memory Efficiency**: Optimized for budget Android TV devices with aggressive cache management
 
 ## Building
 
@@ -98,12 +183,13 @@ sdk install gradle 8.5
 ```bash
 gradle assembleRelease
 ```
-The APK will be generated in `app/build/outputs/apk/release/app-release.apk` (954 KB)
+The APK will be generated in `app/build/outputs/apk/release/app-release.apk` (approximately 1.9 MB)
 
 The release build includes:
 - Code minification and optimization (R8)
 - Resource shrinking
 - Debug symbol removal
+- ProGuard rules for optimal size reduction
 - Signing with debug keystore (for testing)
 
 **Note**: For production releases, you should configure a proper signing key in `app/build.gradle` instead of using the debug keystore.
@@ -113,91 +199,6 @@ The release build includes:
 - Android API Level 21+ (Android 5.0+)
 - Android TV device or emulator
 - Leanback support
-
-## Performance Metrics
-
-- **RAM Usage (PSS)**: ~42.3 MB when active, ~26.8 MB when backgrounded
-- **CPU Usage**: ~0% when idle, 0% when backgrounded
-- **APK Size**: 954 KB
-- **Memory Efficiency**: Optimized for budget Android TV devices with aggressive cache management
-
-## Installation
-
-1. **Download the APK**: [Download Release APK](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app-release.apk)
-2. **Enable "Unknown Sources"** in Android TV settings (Settings → Security & restrictions → Unknown sources)
-3. **Install the APK** using one of these methods:
-
-### Method 1: ADB Installation (Recommended)
-
-This is the easiest method if you have ADB set up:
-
-1. **Connect to your TV via ADB**:
-   ```bash
-   adb connect <TV_IP_ADDRESS>:5555
-   ```
-   (Replace `<TV_IP_ADDRESS>` with your TV's IP address)
-
-2. **Install the APK**:
-   ```bash
-   adb install app-release.apk
-   ```
-   Or if you've downloaded the APK to your current directory:
-   ```bash
-   adb install -r app-release.apk
-   ```
-   (The `-r` flag replaces any existing installation)
-
-3. **Verify installation**:
-   ```bash
-   adb shell pm list packages | grep tvlauncher
-   ```
-   You should see `package:com.tvlauncher` in the output.
-
-### Method 2: File Manager
-
-1. Transfer the APK to your TV using a USB drive, network share, or file transfer app
-2. Open the APK file using a file manager on your TV
-3. Follow the on-screen installation prompts
-
-### Method 3: Network Share
-
-1. Share the APK over your local network (e.g., via SMB, FTP, or HTTP server)
-2. Access the shared file from your TV using a file manager or browser
-3. Download and install the APK
-
-After installation, the launcher will appear in your apps list.
-
-## Setting as Default Launcher (Boot Startup)
-
-To make the launcher start automatically at boot and become the default home screen, use ADB:
-
-1. **Connect to your TV via ADB**:
-   ```bash
-   adb connect <TV_IP_ADDRESS>:5555
-   ```
-
-2. **Enable the launcher component**:
-   ```bash
-   adb shell pm enable com.tvlauncher/.MainActivity
-   ```
-
-3. **Set as default home launcher**:
-   ```bash
-   adb shell cmd package set-home-activity com.tvlauncher/.MainActivity
-   ```
-
-4. **Verify the setting**:
-   ```bash
-   adb shell cmd package get-home-activities
-   ```
-   You should see `com.tvlauncher/.MainActivity` listed as the default.
-
-5. **Test by pressing the Home button** on your TV remote - the launcher should appear.
-
-**Note**: After setting as default, the launcher will automatically start when the TV boots up. To revert to the original launcher, you can use:
-```bash
-adb shell cmd package set-home-activity <original_launcher_package>/<original_launcher_activity>
-```
 
 ## Permissions
 
@@ -215,6 +216,7 @@ adb shell cmd package set-home-activity <original_launcher_package>/<original_la
 - **Background Unloading**: Clock and resources unload when launcher is backgrounded
 - **Aggressive Cache Clearing**: Caches cleared on pause and when activities finish to free memory immediately
 - **Release Build Optimizations**: R8 code shrinking, resource optimization, and minification for optimal performance
+- **ProGuard Rules**: Comprehensive ProGuard configuration for maximum code optimization
 
 ## Project Structure
 
@@ -231,3 +233,8 @@ The launcher uses a simple design that can be easily customized by modifying:
 - Colors in `res/values/colors.xml`
 - Layouts in `res/layout/`
 - Themes in `res/values/themes.xml`
+- Drawables in `res/drawable/`
+
+## License
+
+See [LICENSE](LICENSE) file for details.
