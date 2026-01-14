@@ -1,0 +1,2 @@
+Super lightweight Android TV launcher optimized for minimal RAM and CPU usage
+
