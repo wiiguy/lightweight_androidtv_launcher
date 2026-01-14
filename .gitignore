@@ -1,6 +1,8 @@
 # Built application files
 *.ap_
 *.aab
+# Release APK artifact (don't commit binaries)
+app-release.apk
 # Exclude debug APKs, but include release APK
 app/build/outputs/apk/debug/*.apk
 
