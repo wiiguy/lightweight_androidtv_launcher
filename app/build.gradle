@@ -30,7 +30,6 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            // F-Droid will sign the APK, so we don't specify a signingConfig here
             
             // R8 optimization flags (R8 is enabled by default when minifyEnabled is true)
             // These are implicit but documented here for clarity
