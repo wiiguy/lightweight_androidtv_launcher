@@ -12,3 +12,5 @@ Features:
 - Background Optimization: Automatically unloads resources when backgrounded
 - Settings Access: Quick access to Android TV settings
 
+
+
