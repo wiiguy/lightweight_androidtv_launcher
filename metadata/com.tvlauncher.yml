@@ -1,7 +1,7 @@
 Categories:
   - System
   - Theming
-License: MIT
+License: GPL-3.0-or-later
 AuthorName: wiiguy
 AuthorEmail: 
 AuthorWebSite: https://github.com/wiiguy
@@ -47,4 +47,6 @@ AutoUpdateMode: Version v%v
 UpdateCheckMode: Tags
 CurrentVersion: '1.0'
 CurrentVersionCode: 1
+
+
 
