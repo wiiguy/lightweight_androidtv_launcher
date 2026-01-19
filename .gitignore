@@ -112,3 +112,7 @@ Desktop.ini
 *.bak
 *.cache
 
+# Local push scripts (contain sensitive tokens)
+push.sh
+push-with-token.sh
+

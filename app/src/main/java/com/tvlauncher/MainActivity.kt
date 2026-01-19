@@ -26,6 +26,16 @@ class MainActivity : AppCompatActivity() {
     private var clockRunnable: Runnable? = null
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
     
+    private val refreshReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == "com.tvlauncher.REFRESH_SHORTCUTS") {
+                // Clear cache and reload
+                appManager.clearCache()
+                loadAppSlots()
+            }
+        }
+    }
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -43,14 +53,20 @@ class MainActivity : AppCompatActivity() {
         setupClickListeners()
         loadAppSlots()
         startClock()
+        
+        // Register broadcast receiver for shortcut refresh
+        val filter = android.content.IntentFilter("com.tvlauncher.REFRESH_SHORTCUTS")
+        registerReceiver(refreshReceiver, filter)
     }
     
     private fun setupRecyclerView() {
+        val slotSizePx = calculateSlotSizePx()
         appSlotAdapter = AppSlotAdapter(
             mutableListOf(),
             onSlotClick = { position ->
                 openAppSelection(position)
-            }
+            },
+            slotSizePx = slotSizePx
         )
         
         val layoutManager = LinearLayoutManager(this@MainActivity, LinearLayoutManager.HORIZONTAL, false)
@@ -72,6 +88,23 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.reorderButton).visibility = View.GONE
         findViewById<Button>(R.id.clearAllButton).visibility = View.GONE
         findViewById<TextView>(R.id.reorderStatusText).visibility = View.GONE
+    }
+
+    private fun calculateSlotSizePx(): Int {
+        val displayMetrics = resources.displayMetrics
+        val screenWidthPx = displayMetrics.widthPixels
+        val density = displayMetrics.density
+
+        val sideMarginPx = (16 * density).toInt() * 2
+        val recyclerPaddingPx = (8 * density).toInt() * 2
+        val itemMarginPx = (8 * density).toInt()
+        val totalItemMarginsPx = itemMarginPx * 2 * 5
+
+        val availablePx = screenWidthPx - sideMarginPx - recyclerPaddingPx - totalItemMarginsPx
+        val rawSize = availablePx / 5
+        val minSize = (120 * density).toInt()
+
+        return rawSize.coerceAtLeast(minSize)
     }
     
     private fun openAndroidSettings() {
@@ -122,7 +155,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
-    private fun openAppSelection(slotPosition: Int) {
+    private fun openAppSelection(@Suppress("UNUSED_PARAMETER") slotPosition: Int) {
         val intent = Intent(this, AppSelectionActivity::class.java)
         startActivity(intent)
     }
@@ -150,6 +183,11 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         stopClock()
+        try {
+            unregisterReceiver(refreshReceiver)
+        } catch (e: Exception) {
+            // Receiver might not be registered
+        }
     }
     
     private fun startClock() {

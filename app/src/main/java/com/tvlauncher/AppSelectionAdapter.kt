@@ -11,7 +11,8 @@ import androidx.recyclerview.widget.RecyclerView
 class AppSelectionAdapter(
     private val apps: List<AppInfo>,
     private val selectedApps: MutableSet<String>,
-    private val onSelectionChanged: (String, Boolean) -> Unit
+    private val onSelectionChanged: (String, Boolean) -> Unit,
+    private val appManager: AppManager? = null
 ) : RecyclerView.Adapter<AppSelectionAdapter.AppSelectionViewHolder>() {
 
     class AppSelectionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -30,21 +31,28 @@ class AppSelectionAdapter(
         val app = apps[position]
         // Lazy load icon only when visible
         holder.appIcon.setImageDrawable(app.getIcon(holder.itemView.context.packageManager))
-        holder.appName.text = app.appName
+        holder.appName.text = app.getDisplayName()
         
         // Prevent checkbox from getting focus during scrolling
         holder.checkBox.isFocusable = false
         holder.checkBox.isFocusableInTouchMode = false
         
+        // Get app identifier (packageName for apps, packageName:shortcutId for shortcuts)
+        val appIdentifier = appManager?.getAppIdentifier(app) ?: if (app.isShortcut) {
+            "${app.packageName}:${app.shortcutId}"
+        } else {
+            app.packageName
+        }
+        
         // Remove listener before setting checked state to prevent false triggers
         holder.checkBox.setOnCheckedChangeListener(null)
-        holder.checkBox.isChecked = selectedApps.contains(app.packageName)
+        holder.checkBox.isChecked = selectedApps.contains(appIdentifier)
         
         // Set listener after state is set
         holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
             // Only trigger if this is a real user action (not view recycling)
             if (holder.adapterPosition == position) {
-                onSelectionChanged(app.packageName, isChecked)
+                onSelectionChanged(appIdentifier, isChecked)
             }
         }
         

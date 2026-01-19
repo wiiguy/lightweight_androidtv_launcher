@@ -44,6 +44,19 @@
             android:screenOrientation="landscape"
             android:theme="@style/Theme.TVLauncher" />
 
+        <activity
+            android:name=".PinShortcutActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.TVLauncher"
+            android:excludeFromRecents="true">
+            <intent-filter>
+                <action android:name="android.content.pm.action.CONFIRM_PIN_SHORTCUT" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
     </application>
 
 </manifest>

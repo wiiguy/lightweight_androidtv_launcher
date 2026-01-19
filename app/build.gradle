@@ -19,6 +19,13 @@ android {
         debug {
             // Use default debug keystore
         }
+        release {
+            // Use debug keystore for release (for testing)
+            storeFile file(System.getProperty("user.home") + "/.android/debug.keystore")
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
     }
 
     buildTypes {
@@ -30,6 +37,7 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
             
             // R8 optimization flags (R8 is enabled by default when minifyEnabled is true)
             // These are implicit but documented here for clarity
