@@ -212,7 +212,6 @@ The release build includes:
 ## Permissions
 
 - `QUERY_ALL_PACKAGES`: Required to list installed applications
-- `INTERNET`: For potential future features
 
 ## Performance Optimizations
 
