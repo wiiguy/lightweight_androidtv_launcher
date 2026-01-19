@@ -1,12 +1,14 @@
 # TV Launcher
 
+**Version 1.2**
+
 A super lightweight Android TV launcher optimized for minimal RAM and CPU usage. Allows you to customize your home screen with your favorite apps.
 
 ## TL;DR
 
 **Quick Installation & Setup:**
 
-1. **Download**: [Download Release APK](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app-release.apk) (1.9 MB - optimized release build)
+1. **Download**: [Download Release APK v1.2](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app-release.apk) (1.9 MB - optimized release build)
 2. **Install**: `adb connect <TV_IP>:5555 && adb install -r app-release.apk`
 3. **Set as Default**: `adb shell cmd package set-home-activity com.tvlauncher/.MainActivity`
 
@@ -67,11 +69,11 @@ Browse and select multiple apps from a grid layout. Click the "+" button on an e
 
 Pre-built APK available in the repository:
 
-- **Download APK**: [Download Release APK](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app-release.apk) (1.9 MB - optimized, minified, and signed)
+- **Download APK**: [Download Release APK v1.2](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app-release.apk) (1.9 MB - optimized, minified, and signed)
 
 ## Installation
 
-1. **Download the APK**: [Download Release APK](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app-release.apk)
+1. **Download the APK**: [Download Release APK v1.2](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app-release.apk)
 2. **Enable "Unknown Sources"** in Android TV settings (Settings → Security & restrictions → Unknown sources)
 3. **Install the APK** using one of these methods:
 

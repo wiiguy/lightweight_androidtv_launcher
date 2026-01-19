@@ -99,8 +99,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showAboutDialog() {
+        val versionName = try {
+            packageManager.getPackageInfo(packageName, 0).versionName
+        } catch (e: Exception) {
+            "1.2"
+        }
+        
         val message = """
             TV Launcher
+            Version $versionName
 
             Free and open source.
             License: CC BY-NC 4.0 (no selling).
