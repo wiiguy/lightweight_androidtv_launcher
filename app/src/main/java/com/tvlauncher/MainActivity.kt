@@ -9,7 +9,8 @@ import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.appcompat.app.AlertDialog
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -20,6 +21,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var emptyText: TextView
     private lateinit var settingsButton: Button
     private lateinit var clockText: TextView
+    private lateinit var aboutButton: TextView
     private lateinit var appManager: AppManager
     private lateinit var appSlotAdapter: AppSlotAdapter
     private val clockHandler = Handler(Looper.getMainLooper())
@@ -47,6 +49,7 @@ class MainActivity : AppCompatActivity() {
         emptyText = findViewById(R.id.emptyText)
         settingsButton = findViewById(R.id.settingsButton)
         clockText = findViewById(R.id.clockText)
+        aboutButton = findViewById(R.id.aboutButton)
         
         appManager = AppManager(this)
         setupRecyclerView()
@@ -69,7 +72,7 @@ class MainActivity : AppCompatActivity() {
             slotSizePx = slotSizePx
         )
         
-        val layoutManager = LinearLayoutManager(this@MainActivity, LinearLayoutManager.HORIZONTAL, false)
+        val layoutManager = GridLayoutManager(this@MainActivity, 5)
         appSlots.layoutManager = layoutManager
         appSlots.adapter = appSlotAdapter
         appSlots.setHasFixedSize(true)
@@ -82,12 +85,46 @@ class MainActivity : AppCompatActivity() {
         settingsButton.setOnClickListener {
             openAndroidSettings()
         }
+
+        aboutButton.setOnClickListener {
+            showAboutDialog()
+        }
         
         settingsButton.isFocusable = false
+        aboutButton.isFocusable = true
         findViewById<Button>(R.id.addAppsButton).visibility = View.GONE
         findViewById<Button>(R.id.reorderButton).visibility = View.GONE
         findViewById<Button>(R.id.clearAllButton).visibility = View.GONE
         findViewById<TextView>(R.id.reorderStatusText).visibility = View.GONE
+    }
+
+    private fun showAboutDialog() {
+        val message = """
+            TV Launcher
+
+            Free and open source.
+            License: CC BY-NC 4.0 (no selling).
+
+            https://github.com/wiiguy
+        """.trimIndent()
+
+        AlertDialog.Builder(this)
+            .setTitle("About")
+            .setMessage(message)
+            .setPositiveButton("Open GitHub") { _, _ ->
+                openUrl("https://github.com/wiiguy")
+            }
+            .setNegativeButton("Close", null)
+            .show()
+    }
+
+    private fun openUrl(url: String) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url))
+            startActivity(intent)
+        } catch (e: Exception) {
+            // Ignore if no browser is available
+        }
     }
 
     private fun calculateSlotSizePx(): Int {
@@ -103,7 +140,6 @@ class MainActivity : AppCompatActivity() {
         val availablePx = screenWidthPx - sideMarginPx - recyclerPaddingPx - totalItemMarginsPx
         val rawSize = availablePx / 5
         val minSize = (120 * density).toInt()
-
         return rawSize.coerceAtLeast(minSize)
     }
     

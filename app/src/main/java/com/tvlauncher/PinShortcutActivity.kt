@@ -70,13 +70,14 @@ class PinShortcutActivity : AppCompatActivity() {
                     "PinShortcutActivity",
                     "Accepted shortcut: ${shortcutInfo.`package`}:${shortcutInfo.id}"
                 )
-                android.util.Log.d(
-                    "PinShortcutActivity",
-                    "Accepted shortcut: ${shortcutInfo.`package`}:${shortcutInfo.id}"
-                )
+                
+                val appManager = AppManager(this)
+                if (!appManager.isShortcutSupportEnabled()) {
+                    finish()
+                    return
+                }
                 
                 // Clear cache so the shortcut will be immediately available
-                val appManager = AppManager(this)
                 appManager.clearCache()
                 
                 // Open the app selection screen so user can immediately see and select the shortcut

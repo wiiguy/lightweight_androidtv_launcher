@@ -14,7 +14,7 @@ class AppManager(private val context: Context) {
     private var cachedSelectedApps: Set<String>? = null
     private val iconCache = mutableMapOf<String, android.graphics.drawable.Drawable>()
     
-    fun getInstalledApps(includeShortcuts: Boolean = true): List<AppInfo> {
+    fun getInstalledApps(includeShortcuts: Boolean = isShortcutSupportEnabled()): List<AppInfo> {
         if (cachedApps != null) {
             return if (includeShortcuts) {
                 cachedApps!!
@@ -258,7 +258,10 @@ class AppManager(private val context: Context) {
             }
         }
 
-        if (shortcutIdsByPackage.isNotEmpty() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
+        if (isShortcutSupportEnabled() &&
+            shortcutIdsByPackage.isNotEmpty() &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1
+        ) {
             val launcherApps = context.getSystemService(Context.LAUNCHER_APPS_SERVICE) as? android.content.pm.LauncherApps
             if (launcherApps != null) {
                 shortcutIdsByPackage.forEach { (packageName, shortcutIds) ->
@@ -286,6 +289,16 @@ class AppManager(private val context: Context) {
         }
 
         return results
+    }
+
+    fun isShortcutSupportEnabled(): Boolean {
+        val prefs = context.getSharedPreferences("selected_apps", Context.MODE_PRIVATE)
+        return prefs.getBoolean("shortcuts_enabled", true)
+    }
+
+    fun setShortcutSupportEnabled(enabled: Boolean) {
+        val prefs = context.getSharedPreferences("selected_apps", Context.MODE_PRIVATE)
+        prefs.edit().putBoolean("shortcuts_enabled", enabled).apply()
     }
     
     fun getAppIdentifier(appInfo: AppInfo): String {

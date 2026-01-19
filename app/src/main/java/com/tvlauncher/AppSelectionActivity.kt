@@ -17,6 +17,7 @@ class AppSelectionActivity : AppCompatActivity() {
     private lateinit var doneButton: Button
     private lateinit var appManager: AppManager
     private lateinit var appSelectionAdapter: AppSelectionAdapter
+    private lateinit var shortcutToggle: androidx.appcompat.widget.SwitchCompat
     private val selectedApps = mutableSetOf<String>()
     private var pendingAutoSelectId: String? = null
     
@@ -35,9 +36,11 @@ class AppSelectionActivity : AppCompatActivity() {
         
         appList = findViewById(R.id.appList)
         doneButton = findViewById(R.id.doneButton)
+        shortcutToggle = findViewById(R.id.shortcutToggle)
         
         appManager = AppManager(this)
         selectedApps.addAll(appManager.getSelectedApps())
+        shortcutToggle.isChecked = appManager.isShortcutSupportEnabled()
         pendingAutoSelectId = intent.getStringExtra(EXTRA_AUTO_SELECT_ID)
         setupRecyclerView()
         setupClickListeners()
@@ -100,6 +103,10 @@ class AppSelectionActivity : AppCompatActivity() {
 
     private fun applyAutoSelectIfNeeded() {
         val autoSelectId = pendingAutoSelectId ?: return
+        if (!appManager.isShortcutSupportEnabled()) {
+            pendingAutoSelectId = null
+            return
+        }
         if (!selectedApps.contains(autoSelectId)) {
             selectedApps.add(autoSelectId)
             appManager.saveSelectedApps(selectedApps)
@@ -133,6 +140,20 @@ class AppSelectionActivity : AppCompatActivity() {
             appManager.clearCache()
             setResult(RESULT_OK)
             finish()
+        }
+
+        shortcutToggle.setOnCheckedChangeListener { _, isChecked ->
+            appManager.setShortcutSupportEnabled(isChecked)
+            if (!isChecked) {
+                val toRemove = selectedApps.filter { it.contains(":") }
+                selectedApps.removeAll(toRemove)
+                appManager.saveSelectedApps(selectedApps)
+                sendBroadcast(android.content.Intent("com.tvlauncher.REFRESH_SHORTCUTS"))
+                appManager.clearCache()
+                System.gc()
+                System.runFinalization()
+            }
+            refreshAppList()
         }
     }
     

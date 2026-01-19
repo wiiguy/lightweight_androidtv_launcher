@@ -36,16 +36,20 @@ Done! Press Home on your TV remote to see the launcher.
 
 ## Features
 
-- **Ultra Lightweight**: Optimized for minimal resource usage (~40MB RAM active, ~27MB backgrounded)
+- **Ultra Lightweight**: Optimized for minimal resource usage (~35-55MB RAM active, ~25-30MB backgrounded)
 - **Small APK Size**: Only 1.9 MB - optimized and minified
 - **Simple Interface**: Clean, TV-optimized interface with D-pad navigation
 - **Multiple App Selection**: Select multiple apps before saving
 - **Grid App Selection**: Browse and select apps from a grid layout
+- **Shortcut Pinning Support**: Accepts pinned shortcuts from apps (e.g., Activity Launcher)
+- **Auto-Select Pinned Shortcuts**: Newly pinned shortcuts are auto-selected in the add app screen
+- **Shortcut Toggle**: Disable shortcut support from the Add Apps screen
 - **Digital Clock**: Displays current time in the top-left corner (updates every minute)
 - **Lazy Icon Loading**: Icons load only when visible, reducing memory usage
 - **Smart Caching**: Icon cache prevents reloading the same icons
 - **Background Optimization**: Automatically unloads resources when backgrounded
 - **Settings Access**: Quick access to Android TV settings
+- **Consistent Layout**: Home row shows 5 icons across
 
 ## Screenshots
 
@@ -138,12 +142,17 @@ adb shell cmd package set-home-activity <original_launcher_package>/<original_la
    - Browse apps in the grid selection screen
    - Use DPAD to navigate and select multiple apps (they'll be highlighted when selected)
    - Press "Done" button to save all selected apps to the slot
-4. **Launch Apps**: Navigate to any app on the home screen and press the center button to launch it
-5. **Access Settings**: Press the "SETTINGS" button in the top-right corner to open Android TV settings
+4. **Pinned Shortcuts**:
+   - When an app requests a pinned shortcut, the launcher opens the add app screen
+   - The new shortcut is auto-selected and saved
+   - Unselecting a shortcut removes it from the launcher and unpins it
+   - Use the **Shortcuts** toggle to disable shortcut support
+5. **Launch Apps**: Navigate to any app/shortcut on the home screen and press the center button to launch it
+6. **Access Settings**: Press the "SETTINGS" button in the top-right corner to open Android TV settings
 
 ## Performance Metrics
 
-- **RAM Usage (PSS)**: ~40 MB when active, ~27 MB when backgrounded
+- **RAM Usage (PSS)**: ~35-55 MB when active, ~25-30 MB when backgrounded
 - **CPU Usage**: ~0% when idle, 0% when backgrounded
 - **APK Size**: 1.9 MB
 - **Memory Efficiency**: Optimized for budget Android TV devices with aggressive cache management
@@ -208,11 +217,13 @@ The release build includes:
 ## Performance Optimizations
 
 - **Lazy Icon Loading**: Icons are loaded on-demand when views become visible
-- **Icon Caching**: Up to 20 icons cached (reduced from 50) to minimize memory usage
+- **Icon Caching**: Up to 10 icons cached to minimize memory usage
 - **RecyclerView Cache Optimization**: Reduced view cache sizes (2-5 items) for lower memory footprint
 - **Clock Optimization**: Updates every minute instead of every second
 - **Simplified Drawables**: Reduced rendering overhead with simpler backgrounds
 - **Smaller Icons**: 60dp icons instead of 80dp for reduced memory
+- **Shortcut Optimization**: Only load shortcut metadata for selected shortcuts on the home screen
+- **Shortcut Toggle**: Disable shortcut support to reduce memory usage
 - **Background Unloading**: Clock and resources unload when launcher is backgrounded
 - **Aggressive Cache Clearing**: Caches cleared on pause and when activities finish to free memory immediately
 - **Release Build Optimizations**: R8 code shrinking, resource optimization, and minification for optimal performance
@@ -223,6 +234,7 @@ The release build includes:
 - `MainActivity`: Home screen with app slots and clock
 - `AppSelectionActivity`: Grid-based app selection interface with multiple selection support
 - `AppManager`: Handles app discovery, storage, and icon caching
+- `PinShortcutActivity`: Handles pinned shortcut requests (CONFIRM_PIN_SHORTCUT)
 - `AppSlotAdapter`: RecyclerView adapter for app slots on home screen
 - `AppSelectionAdapter`: RecyclerView adapter for app selection grid
 - `AppInfo`: Data class with lazy icon loading support
