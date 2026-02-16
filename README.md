@@ -8,8 +8,8 @@ A super lightweight Android TV launcher optimized for minimal RAM and CPU usage.
 
 **Quick Installation & Setup:**
 
-1. **Download**: [Download Release APK v1.2](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app-release.apk) (1.9 MB - optimized release build)
-2. **Install**: `adb connect <TV_IP>:5555 && adb install -r app-release.apk`
+1. **Download**: [Download latest release](https://github.com/wiiguy/lightweight_androidtv_launcher/releases/latest) (APK built from source by GitHub Actions)
+2. **Install**: `adb connect <TV_IP>:5555 && adb install -r path/to/app-release.apk`
 3. **Set as Default**: `adb shell cmd package set-home-activity com.tvlauncher/.MainActivity`
 
 Done! Press Home on your TV remote to see the launcher.
@@ -67,13 +67,13 @@ Browse and select multiple apps from a grid layout. Click the "+" button on an e
 
 ## Download
 
-Pre-built APK available in the repository:
+Pre-built APKs are built from source and attached to [Releases](https://github.com/wiiguy/lightweight_androidtv_launcher/releases). Each release includes the signed `app-release.apk`.
 
-- **Download APK**: [Download Release APK v1.2](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app-release.apk) (1.9 MB - optimized, minified, and signed)
+- **Download**: [Latest release](https://github.com/wiiguy/lightweight_androidtv_launcher/releases/latest) (APK built automatically by GitHub Actions)
 
 ## Installation
 
-1. **Download the APK**: [Download Release APK v1.2](https://github.com/wiiguy/lightweight_androidtv_launcher/raw/main/app-release.apk)
+1. **Download the APK**: Get `app-release.apk` from the [latest release](https://github.com/wiiguy/lightweight_androidtv_launcher/releases/latest)
 2. **Enable "Unknown Sources"** in Android TV settings (Settings → Security & restrictions → Unknown sources)
 3. **Install the APK** using one of these methods:
 
@@ -163,7 +163,7 @@ adb shell cmd package set-home-activity <original_launcher_package>/<original_la
 
 ### Prerequisites
 
-This project requires Gradle to be installed on your system. The Gradle wrapper is not included in this repository.
+This project uses the Gradle wrapper; no need to install Gradle. To build locally, use `./gradlew` (or install Gradle and use `gradle`).
 
 #### Installing Gradle
 
@@ -192,8 +192,10 @@ sdk install gradle 8.5
 
 **Release Build:**
 ```bash
-gradle assembleRelease
+./gradlew assembleRelease
 ```
+
+**Releases:** Pushing a tag (e.g. `v1.2`) triggers [GitHub Actions](.github/workflows/release.yml) to build the APK and attach it to a new [Release](https://github.com/wiiguy/lightweight_androidtv_launcher/releases). No need to commit the APK to the repo.
 The APK will be generated in `app/build/outputs/apk/release/app-release.apk` (approximately 1.9 MB)
 
 The release build includes:

@@ -84,11 +84,6 @@ lint/tmp/
 # Gradle cache
 .gradle/
 
-# Gradle wrapper files
-gradle/wrapper/
-gradlew
-gradlew.bat
-
 # Gradle 8.5 (local installation)
 gradle-8.5/
 gradle-8.5-bin.zip
@@ -115,4 +110,3 @@ Desktop.ini
 # Local push scripts (contain sensitive tokens)
 push.sh
 push-with-token.sh
-
