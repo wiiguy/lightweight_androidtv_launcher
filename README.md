@@ -1,6 +1,6 @@
 # TV Launcher
 
-**Version 1.2** — Lightweight Android TV launcher. Minimal RAM use, customizable home row of apps.
+**Version 1.2** — Lightweight Android TV launcher. Minimal RAM use, customizable home row of apps. Built with AI assistance.
 
 ## Quick start
 
