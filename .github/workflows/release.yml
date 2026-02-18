@@ -1,3 +1,8 @@
+# Release signing: add these GitHub repo Secrets so every release uses the same key
+# (otherwise each run would create a new keystore and users would have to uninstall to update).
+# Required secrets:
+#   KEYSTORE_BASE64    - base64-encoded release keystore (create once: keytool -genkey ... then base64 -w 0 release.keystore)
+#   SIGNING_STORE_PASSWORD, SIGNING_KEY_ALIAS, SIGNING_KEY_PASSWORD - keystore/key credentials
 name: Build and Release
 
 on:
@@ -25,16 +30,19 @@ jobs:
         run: |
           sdkmanager "platforms;android-34" "build-tools;34.0.0"
 
-      - name: Create debug keystore for release signing
+      - name: Decode signing keystore
         run: |
-          mkdir -p "$HOME/.android"
-          keytool -genkey -v -keystore "$HOME/.android/debug.keystore" \
-            -storepass android -alias androiddebugkey -keypass android \
-            -keyalg RSA -keysize 2048 -validity 10000 \
-            -dname "CN=Android Debug,O=Android,C=US"
+          echo "$KEYSTORE_BASE64" | base64 -d > release.keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
 
       - name: Build release APK
         run: ./gradlew assembleRelease --no-daemon
+        env:
+          SIGNING_STORE_FILE: ${{ github.workspace }}/release.keystore
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
