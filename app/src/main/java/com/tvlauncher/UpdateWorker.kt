@@ -14,6 +14,7 @@ class UpdateWorker(
             AppUpdateManager.UpdateResult.NoUpdate,
             AppUpdateManager.UpdateResult.InstallStarted,
             AppUpdateManager.UpdateResult.InstallPermissionNeeded,
+            AppUpdateManager.UpdateResult.InvalidRelease,
             AppUpdateManager.UpdateResult.Skipped -> Result.success()
             AppUpdateManager.UpdateResult.DownloadFailed -> Result.retry()
         }

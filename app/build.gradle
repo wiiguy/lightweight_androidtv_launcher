@@ -11,8 +11,8 @@ android {
         applicationId "com.tvlauncher"
         minSdk 21
         targetSdk 34
-        versionCode 5
-        versionName "1.5"
+        versionCode 10503
+        versionName "1.5.3"
     }
 
     signingConfigs {

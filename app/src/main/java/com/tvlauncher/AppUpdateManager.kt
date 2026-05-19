@@ -2,6 +2,7 @@ package com.tvlauncher
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -33,6 +34,11 @@ object AppUpdateManager {
     data class ReleaseInfo(
         val versionName: String,
         val downloadUrl: String
+    )
+
+    data class ApkVersionInfo(
+        val versionName: String,
+        val versionCode: Long
     )
 
     fun isAutoUpdateEnabled(context: Context): Boolean {
@@ -73,17 +79,83 @@ object AppUpdateManager {
         if (!ignoreAutoUpdateSetting && !isAutoUpdateEnabled(context)) {
             return UpdateResult.Skipped
         }
-        val currentVersion = BuildConfig.VERSION_NAME
+        val currentVersion = getInstalledVersionName(context)
+        val installedVersionCode = getInstalledVersionCode(context)
         val release = fetchLatestRelease() ?: return UpdateResult.NoUpdate
         if (!VersionUtils.isNewer(release.versionName, currentVersion)) {
             return UpdateResult.NoUpdate
         }
         val apkFile = downloadApk(context, release.downloadUrl) ?: return UpdateResult.DownloadFailed
-        return if (promptInstall(context, apkFile, release.versionName)) {
+        val apkVersion = readApkVersion(context, apkFile) ?: return UpdateResult.DownloadFailed
+        if (apkVersion.versionCode <= installedVersionCode) {
+            apkFile.delete()
+            return UpdateResult.InvalidRelease
+        }
+        if (!VersionUtils.isNewer(apkVersion.versionName, currentVersion)) {
+            apkFile.delete()
+            return UpdateResult.InvalidRelease
+        }
+        return if (promptInstall(context, apkFile, apkVersion.versionName)) {
             UpdateResult.InstallStarted
         } else {
             UpdateResult.InstallPermissionNeeded
         }
+    }
+
+    fun getInstalledVersionName(context: Context): String {
+        return try {
+            val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.getPackageInfo(
+                    context.packageName,
+                    PackageManager.PackageInfoFlags.of(0)
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getPackageInfo(context.packageName, 0)
+            }
+            packageInfo.versionName ?: BuildConfig.VERSION_NAME
+        } catch (_: Exception) {
+            BuildConfig.VERSION_NAME
+        }
+    }
+
+    fun getInstalledVersionCode(context: Context): Long {
+        return try {
+            val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.getPackageInfo(
+                    context.packageName,
+                    PackageManager.PackageInfoFlags.of(0)
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getPackageInfo(context.packageName, 0)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                packageInfo.longVersionCode
+            } else {
+                @Suppress("DEPRECATION")
+                packageInfo.versionCode.toLong()
+            }
+        } catch (_: Exception) {
+            BuildConfig.VERSION_CODE.toLong()
+        }
+    }
+
+    fun readApkVersion(context: Context, apkFile: File): ApkVersionInfo? {
+        val packageInfo = context.packageManager.getPackageArchiveInfo(apkFile.absolutePath, 0)
+            ?: return null
+        packageInfo.applicationInfo?.let { appInfo ->
+            appInfo.sourceDir = apkFile.absolutePath
+            appInfo.publicSourceDir = apkFile.absolutePath
+        }
+        val versionName = packageInfo.versionName ?: return null
+        val versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            packageInfo.longVersionCode
+        } else {
+            @Suppress("DEPRECATION")
+            packageInfo.versionCode.toLong()
+        }
+        return ApkVersionInfo(versionName = versionName, versionCode = versionCode)
     }
 
     fun fetchLatestRelease(): ReleaseInfo? {
@@ -250,6 +322,7 @@ object AppUpdateManager {
         InstallStarted,
         InstallPermissionNeeded,
         DownloadFailed,
+        InvalidRelease,
         Skipped
     }
 }

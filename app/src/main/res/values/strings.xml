@@ -23,6 +23,7 @@
     <string name="update_none">You\'re on the latest version.</string>
     <string name="update_ready">Update downloaded. Confirm install.</string>
     <string name="update_failed">Update check or download failed.</string>
+    <string name="update_invalid_release">Update file on GitHub does not match the release version. Try again after a new release is published.</string>
     <string name="update_disabled">Automatic updates are off.</string>
     <string name="update_permission_needed">Allow installs from this app in Settings.</string>
     <string name="update_available_title">Update available</string>

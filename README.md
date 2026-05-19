@@ -1,6 +1,6 @@
 # TV Launcher
 
-**Version 1.5.2** — A lightweight Android TV home launcher focused on low RAM use and a simple, customizable app grid. Built with AI assistance.
+**Version 1.5.3** — A lightweight Android TV home launcher focused on low RAM use and a simple, customizable app grid. Built with AI assistance.
 
 ## Features
 
@@ -98,7 +98,7 @@ Requires JDK 17 and the Android SDK (API 34).
 
 Release APK: `app/build/outputs/apk/release/app-release.apk`
 
-Pushing a tag like `v1.5` triggers the [release workflow](.github/workflows/release.yml) to build and publish a signed APK (requires signing secrets in the repo).
+Pushing a tag like `v1.5.3` triggers the [release workflow](.github/workflows/release.yml) to build and publish a signed APK. The workflow sets `versionName` and `versionCode` from the tag (e.g. `v1.5.3` → `1.5.3` / `10503`) and verifies the APK before upload (requires signing secrets in the repo).
 
 ## Requirements
 

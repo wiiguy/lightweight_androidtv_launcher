@@ -30,6 +30,20 @@ jobs:
         run: |
           sdkmanager "platforms;android-34" "build-tools;34.0.0"
 
+      - name: Set version from tag
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          TAG="${TAG#V}"
+          MAJOR=$(echo "$TAG" | cut -d. -f1)
+          MINOR=$(echo "$TAG" | cut -d. -f2)
+          PATCH=$(echo "$TAG" | cut -d. -f3)
+          PATCH=${PATCH:-0}
+          VERSION_CODE=$((MAJOR * 10000 + MINOR * 100 + PATCH))
+          sed -i "s/versionCode [0-9]*/versionCode ${VERSION_CODE}/" app/build.gradle
+          sed -i "s/versionName \"[^\"]*\"/versionName \"${TAG}\"/" app/build.gradle
+          echo "Building versionName=${TAG} versionCode=${VERSION_CODE}"
+          grep -E 'versionCode|versionName' app/build.gradle
+
       - name: Decode signing keystore
         run: |
           echo "$KEYSTORE_BASE64" | base64 -d > release.keystore
@@ -43,6 +57,19 @@ jobs:
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+
+      - name: Verify APK version matches tag
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          TAG="${TAG#V}"
+          MAJOR=$(echo "$TAG" | cut -d. -f1)
+          MINOR=$(echo "$TAG" | cut -d. -f2)
+          PATCH=$(echo "$TAG" | cut -d. -f3)
+          PATCH=${PATCH:-0}
+          VERSION_CODE=$((MAJOR * 10000 + MINOR * 100 + PATCH))
+          BADGING=$(aapt dump badging app/build/outputs/apk/release/app-release.apk)
+          echo "$BADGING" | grep -F "versionName='${TAG}'"
+          echo "$BADGING" | grep -F "versionCode='${VERSION_CODE}'"
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2

@@ -123,6 +123,7 @@ class MainActivity : AppCompatActivity() {
                     AppUpdateManager.UpdateResult.InstallPermissionNeeded ->
                         getString(R.string.update_permission_needed)
                     AppUpdateManager.UpdateResult.DownloadFailed -> getString(R.string.update_failed)
+                    AppUpdateManager.UpdateResult.InvalidRelease -> getString(R.string.update_invalid_release)
                     AppUpdateManager.UpdateResult.Skipped -> getString(R.string.update_disabled)
                 }
                 Toast.makeText(this, message, Toast.LENGTH_LONG).show()
