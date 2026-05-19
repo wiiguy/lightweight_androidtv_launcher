@@ -1,6 +1,6 @@
 # TV Launcher
 
-**Version 1.5** — A lightweight Android TV home launcher focused on low RAM use and a simple, customizable app grid. Built with AI assistance.
+**Version 1.5.2** — A lightweight Android TV home launcher focused on low RAM use and a simple, customizable app grid. Built with AI assistance.
 
 ## Features
 

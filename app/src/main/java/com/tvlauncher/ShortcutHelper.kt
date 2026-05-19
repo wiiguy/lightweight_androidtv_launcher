@@ -5,15 +5,20 @@ import android.content.Intent
 import android.content.pm.LauncherApps
 import android.content.pm.PackageManager
 import android.content.pm.ShortcutInfo
+import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Process
+import androidx.annotation.RequiresApi
 
 object ShortcutHelper {
-    private val shortcutFlags: Int
-        get() = LauncherApps.ShortcutQuery.FLAG_MATCH_DYNAMIC or
-            LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED or
-            LauncherApps.ShortcutQuery.FLAG_MATCH_MANIFEST
+    private const val FLAG_MATCH_MANIFEST = 1
+    private const val FLAG_MATCH_DYNAMIC = 1 shl 1
+    private const val FLAG_MATCH_PINNED = 1 shl 2
 
+    private val shortcutFlags: Int =
+        FLAG_MATCH_DYNAMIC or FLAG_MATCH_PINNED or FLAG_MATCH_MANIFEST
+
+    @SuppressLint("WrongConstant")
     fun buildQuery(
         packageName: String?,
         flags: Int = shortcutFlags,
@@ -76,24 +81,42 @@ object ShortcutHelper {
     }
 
     fun getShortcuts(launcherApps: LauncherApps, query: Any): List<ShortcutInfo>? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N_MR1) {
+            return null
+        }
         return try {
-            val raw = if (query is LauncherApps.ShortcutQuery) {
-                launcherApps.getShortcuts(query, Process.myUserHandle())
+            if (query is LauncherApps.ShortcutQuery) {
+                getShortcutsApi25(launcherApps, query)
             } else {
-                val shortcutQueryClass = Class.forName("android.content.pm.LauncherApps\$ShortcutQuery")
-                val getShortcutsMethod = launcherApps.javaClass.getMethod(
-                    "getShortcuts",
-                    shortcutQueryClass,
-                    android.os.UserHandle::class.java
-                )
-                getShortcutsMethod.invoke(launcherApps, query, Process.myUserHandle()) as? List<*>
+                getShortcutsReflection(launcherApps, query)
             }
-            raw?.mapNotNull { it as? ShortcutInfo }
         } catch (_: Exception) {
             null
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.N_MR1)
+    private fun getShortcutsApi25(
+        launcherApps: LauncherApps,
+        query: LauncherApps.ShortcutQuery
+    ): List<ShortcutInfo>? {
+        return launcherApps.getShortcuts(query, Process.myUserHandle())
+    }
+
+    @RequiresApi(Build.VERSION_CODES.N_MR1)
+    @SuppressLint("NewApi")
+    private fun getShortcutsReflection(launcherApps: LauncherApps, query: Any): List<ShortcutInfo>? {
+        val shortcutQueryClass = Class.forName("android.content.pm.LauncherApps\$ShortcutQuery")
+        val getShortcutsMethod = launcherApps.javaClass.getMethod(
+            "getShortcuts",
+            shortcutQueryClass,
+            android.os.UserHandle::class.java
+        )
+        val raw = getShortcutsMethod.invoke(launcherApps, query, Process.myUserHandle()) as? List<*>
+        return raw?.mapNotNull { it as? ShortcutInfo }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.N_MR1)
     fun queryShortcutsForPackages(
         context: Context,
         packageNames: Collection<String>
@@ -215,10 +238,7 @@ object ShortcutHelper {
         try {
             val launcherApps = context.getSystemService(Context.LAUNCHER_APPS_SERVICE) as? LauncherApps
                 ?: return
-            val query = buildQuery(
-                packageName,
-                LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED
-            ) ?: return
+            val query = buildQuery(packageName, FLAG_MATCH_PINNED) ?: return
             val pinnedShortcuts = getShortcuts(launcherApps, query)
                 ?.filter { it.isPinned }
                 ?.map { it.id }

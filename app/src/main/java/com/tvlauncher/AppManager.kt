@@ -7,6 +7,7 @@ import android.content.pm.ShortcutInfo
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import androidx.annotation.RequiresApi
 import java.lang.ref.WeakReference
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
@@ -248,10 +249,7 @@ class AppManager(private val context: Context) {
         }
         val launcherApps = context.getSystemService(Context.LAUNCHER_APPS_SERVICE)
             as? android.content.pm.LauncherApps ?: return null
-        val flags = android.content.pm.LauncherApps.ShortcutQuery.FLAG_MATCH_DYNAMIC or
-            android.content.pm.LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED or
-            android.content.pm.LauncherApps.ShortcutQuery.FLAG_MATCH_MANIFEST
-        val query = ShortcutHelper.buildQuery(packageName, flags, listOf(shortcutId)) ?: return null
+        val query = ShortcutHelper.buildQuery(packageName, shortcutIds = listOf(shortcutId)) ?: return null
         val shortcut = ShortcutHelper.getShortcuts(launcherApps, query)
             ?.firstOrNull { it.id == shortcutId }
             ?: return null
@@ -267,6 +265,7 @@ class AppManager(private val context: Context) {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.N_MR1)
     private fun ShortcutInfo.toAppInfo(appName: String): AppInfo {
         return AppInfo(
             packageName = `package`,

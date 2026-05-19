@@ -4,6 +4,7 @@ import android.content.Intent
 import android.content.pm.ShortcutInfo
 import android.os.Build
 import android.os.Bundle
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 
 class PinShortcutActivity : AppCompatActivity() {
@@ -19,6 +20,7 @@ class PinShortcutActivity : AppCompatActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun handlePinRequest() {
         try {
             val launcherApps = getSystemService(android.content.Context.LAUNCHER_APPS_SERVICE)
