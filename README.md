@@ -14,7 +14,9 @@
 
 ## Quick start
 
-1. **Download** the [latest release](https://github.com/wiiguy/lightweight_androidtv_launcher/releases/latest) (release APK built by GitHub Actions when a `v*` tag is pushed).
+1. **Download** the APK using one of these options:
+   - **Downloader app (easiest on TV)** — see [Download with Downloader](#download-with-downloader) (code **4291463**)
+   - **Browser / PC** — [latest release](https://github.com/wiiguy/lightweight_androidtv_launcher/releases/latest) (release APK built by GitHub Actions when a `v*` tag is pushed)
 2. **Install** (ADB example):
 
    ```bash
@@ -41,6 +43,23 @@ Press **Home** on the remote to open the launcher.
 **App selection**
 
 ![App Selection](screenshot_add_apps_window.png)
+
+## Download with Downloader
+
+On Fire TV, Google TV, or Android TV, the fastest way to get the APK is **[Downloader by AFTVnews](https://www.aftvnews.com/downloader/)** (install from the Amazon Appstore on Fire TV, or from Google Play on Android TV / Google TV).
+
+1. Open **Downloader**
+2. In the URL box, enter this short code and press **Go**:
+
+   ```
+   4291463
+   ```
+
+   You can also enter the full short link: `https://aftv.news/4291463` — both open the [latest `app-release.apk`](https://github.com/wiiguy/lightweight_androidtv_launcher/releases/latest/download/app-release.apk) from GitHub.
+3. When the download finishes, choose **Install** (allow **Install unknown apps** for Downloader if Android asks)
+4. After install, press **Home** and set TV Launcher as your home app if prompted
+
+> The short code always tracks the **latest** GitHub release. You do not need to re-enter a new code when a new version is published.
 
 ## Install without ADB
 
