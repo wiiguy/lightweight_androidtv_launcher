@@ -6,14 +6,16 @@ import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 
 class AppSelectionAdapter(
-    private val apps: List<AppInfo>,
     private val selectedApps: MutableSet<String>,
     private val onSelectionChanged: (String, Boolean) -> Unit,
-    private val appManager: AppManager? = null
-) : RecyclerView.Adapter<AppSelectionAdapter.AppSelectionViewHolder>() {
+    private val appManager: AppManager? = null,
+    private val iconSizePx: Int = 0
+) : ListAdapter<AppInfo, AppSelectionAdapter.AppSelectionViewHolder>(DIFF_CALLBACK) {
 
     class AppSelectionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val appIcon: ImageView = itemView.findViewById(R.id.appIcon)
@@ -28,42 +30,49 @@ class AppSelectionAdapter(
     }
 
     override fun onBindViewHolder(holder: AppSelectionViewHolder, position: Int) {
-        val app = apps[position]
-        // Lazy load icon only when visible
-        holder.appIcon.setImageDrawable(app.getIcon(holder.itemView.context.packageManager))
+        val app = getItem(position)
+        holder.appIcon.setImageDrawable(
+            app.getIcon(holder.itemView.context.packageManager, iconSizePx)
+        )
         holder.appName.text = app.getDisplayName()
-        
-        // Prevent checkbox from getting focus during scrolling
+
         holder.checkBox.isFocusable = false
         holder.checkBox.isFocusableInTouchMode = false
-        
-        // Get app identifier (packageName for apps, packageName:shortcutId for shortcuts)
-        val appIdentifier = appManager?.getAppIdentifier(app) ?: if (app.isShortcut) {
-            "${app.packageName}:${app.shortcutId}"
-        } else {
-            app.packageName
-        }
-        
-        // Remove listener before setting checked state to prevent false triggers
+
+        val appIdentifier = appManager?.getAppIdentifier(app) ?: AppIdentifier.encode(app)
+
         holder.checkBox.setOnCheckedChangeListener(null)
         holder.checkBox.isChecked = selectedApps.contains(appIdentifier)
-        
-        // Set listener after state is set
+
         holder.checkBox.setOnCheckedChangeListener { _, isChecked ->
-            // Only trigger if this is a real user action (not view recycling)
-            if (holder.adapterPosition == position) {
+            if (holder.bindingAdapterPosition != RecyclerView.NO_POSITION) {
                 onSelectionChanged(appIdentifier, isChecked)
             }
         }
-        
+
         holder.itemView.setOnClickListener {
-            // Only allow selection through explicit click
-            if (holder.adapterPosition == position) {
-                val newCheckedState = !holder.checkBox.isChecked
-                holder.checkBox.isChecked = newCheckedState
+            if (holder.bindingAdapterPosition != RecyclerView.NO_POSITION) {
+                holder.checkBox.isChecked = !holder.checkBox.isChecked
             }
         }
     }
 
-    override fun getItemCount(): Int = apps.size
+    fun updateSelectionState() {
+        notifyItemRangeChanged(0, itemCount)
+    }
+
+    companion object {
+        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<AppInfo>() {
+            override fun areItemsTheSame(oldItem: AppInfo, newItem: AppInfo): Boolean {
+                return AppIdentifier.encode(oldItem) == AppIdentifier.encode(newItem)
+            }
+
+            override fun areContentsTheSame(oldItem: AppInfo, newItem: AppInfo): Boolean {
+                return oldItem.packageName == newItem.packageName &&
+                    oldItem.appName == newItem.appName &&
+                    oldItem.shortcutId == newItem.shortcutId &&
+                    oldItem.shortcutLabel == newItem.shortcutLabel
+            }
+        }
+    }
 }

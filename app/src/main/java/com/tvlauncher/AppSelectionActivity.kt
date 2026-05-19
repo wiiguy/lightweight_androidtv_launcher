@@ -2,103 +2,116 @@ package com.tvlauncher
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.GridLayoutManager
+import android.view.View
 import android.widget.Button
+import android.widget.ProgressBar
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 class AppSelectionActivity : AppCompatActivity() {
-    
+
     companion object {
         const val EXTRA_AUTO_SELECT_ID = "com.tvlauncher.EXTRA_AUTO_SELECT_ID"
     }
 
     private lateinit var appList: RecyclerView
     private lateinit var doneButton: Button
+    private lateinit var loadingProgress: ProgressBar
+    private lateinit var titleText: TextView
     private lateinit var appManager: AppManager
     private lateinit var appSelectionAdapter: AppSelectionAdapter
     private lateinit var shortcutToggle: androidx.appcompat.widget.SwitchCompat
-    private val selectedApps = mutableSetOf<String>()
+    private val selectedApps = linkedSetOf<String>()
     private var pendingAutoSelectId: String? = null
-    
+    private val selectionIconSizePx: Int by lazy { (60 * resources.displayMetrics.density).toInt() }
+
     private val refreshReceiver = object : android.content.BroadcastReceiver() {
-        override fun onReceive(context: android.content.Context?, intent: android.content.Intent?) {
-            if (intent?.action == "com.tvlauncher.REFRESH_APP_SELECTION") {
-                // Refresh the app list when a shortcut is pinned
-                refreshAppList()
+        override fun onReceive(context: android.content.Context?, intent: Intent?) {
+            if (intent?.action == LauncherBroadcast.ACTION_REFRESH_APP_SELECTION) {
+                reloadAppList(invalidateCache = true)
             }
         }
     }
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_app_selection)
-        
+
         appList = findViewById(R.id.appList)
         doneButton = findViewById(R.id.doneButton)
+        loadingProgress = findViewById(R.id.loadingProgress)
+        titleText = findViewById(R.id.titleText)
         shortcutToggle = findViewById(R.id.shortcutToggle)
-        
+
         appManager = AppManager(this)
         selectedApps.addAll(appManager.getSelectedApps())
         shortcutToggle.isChecked = appManager.isShortcutSupportEnabled()
-        pendingAutoSelectId = intent.getStringExtra(EXTRA_AUTO_SELECT_ID)
-        setupRecyclerView()
-        setupClickListeners()
-        applyAutoSelectIfNeeded()
-        
-        // Register broadcast receiver for shortcut refresh
-        val filter = android.content.IntentFilter("com.tvlauncher.REFRESH_APP_SELECTION")
-        registerReceiver(refreshReceiver, filter)
-    }
-    
-    private fun refreshAppList() {
-        // Clear cache and reload
-        appManager.clearCache()
-        val allApps = appManager.getInstalledApps()
-        
-        // Update adapter with new list
-        appSelectionAdapter = AppSelectionAdapter(
-            allApps,
-            selectedApps,
-            { appIdentifier, isSelected ->
-                if (isSelected) {
-                    selectedApps.add(appIdentifier)
-                } else {
-                    selectedApps.remove(appIdentifier)
-                    handleShortcutUnselect(appIdentifier)
-                }
-            },
-            appManager
-        )
-        appList.adapter = appSelectionAdapter
-        applyAutoSelectIfNeeded()
-    }
-    
-    private fun setupRecyclerView() {
-        val allApps = appManager.getInstalledApps()
-        
-        appSelectionAdapter = AppSelectionAdapter(
-            allApps,
-            selectedApps,
-            { appIdentifier, isSelected ->
-                // Just update the selection set, don't save or finish yet
-                if (isSelected) {
-                    selectedApps.add(appIdentifier)
-                } else {
-                    selectedApps.remove(appIdentifier)
-                    handleShortcutUnselect(appIdentifier)
-                }
-            },
-            appManager
-        )
-        
-        // Calculate number of columns based on screen size
+        pendingAutoSelectId = intent.getStringExtra(EXTRA_AUTO_SELECT_ID)?.let { AppIdentifier.normalize(it) }
+
+        titleText.text = getString(R.string.select_apps_max, AppManager.MAX_SLOTS)
+
         val spanCount = calculateSpanCount()
-        appList.layoutManager = GridLayoutManager(this@AppSelectionActivity, spanCount)
+        appList.layoutManager = GridLayoutManager(this, spanCount)
+        appSelectionAdapter = AppSelectionAdapter(
+            selectedApps,
+            ::onSelectionChanged,
+            appManager,
+            selectionIconSizePx
+        )
         appList.adapter = appSelectionAdapter
-        // Reduce RecyclerView cache sizes for lower memory usage
         appList.setItemViewCacheSize(5)
         appList.recycledViewPool.setMaxRecycledViews(0, 5)
+
+        setupClickListeners()
+        reloadAppList(invalidateCache = false)
+
+        ContextCompat.registerReceiver(
+            this,
+            refreshReceiver,
+            android.content.IntentFilter(LauncherBroadcast.ACTION_REFRESH_APP_SELECTION),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+    }
+
+    private fun onSelectionChanged(appIdentifier: String, isSelected: Boolean) {
+        val normalized = AppIdentifier.normalize(appIdentifier)
+        if (isSelected) {
+            if (!appManager.canAddMoreSelections(selectedApps.size) && !selectedApps.contains(normalized)) {
+                Toast.makeText(
+                    this,
+                    getString(R.string.slot_limit_reached, AppManager.MAX_SLOTS),
+                    Toast.LENGTH_SHORT
+                ).show()
+                appSelectionAdapter.updateSelectionState()
+                return
+            }
+            selectedApps.add(normalized)
+        } else {
+            selectedApps.remove(normalized)
+            handleShortcutUnselect(normalized)
+        }
+    }
+
+    private fun reloadAppList(invalidateCache: Boolean) {
+        if (invalidateCache) {
+            appManager.invalidateAppListCache()
+        }
+        loadingProgress.visibility = View.VISIBLE
+        appList.visibility = View.INVISIBLE
+
+        appManager.loadInstalledAppsAsync(shortcutToggle.isChecked) { apps ->
+            if (isFinishing) {
+                return@loadInstalledAppsAsync
+            }
+            loadingProgress.visibility = View.GONE
+            appList.visibility = View.VISIBLE
+            appSelectionAdapter.submitList(apps)
+            applyAutoSelectIfNeeded()
+        }
     }
 
     private fun applyAutoSelectIfNeeded() {
@@ -108,36 +121,34 @@ class AppSelectionActivity : AppCompatActivity() {
             return
         }
         if (!selectedApps.contains(autoSelectId)) {
-            selectedApps.add(autoSelectId)
-            appManager.saveSelectedApps(selectedApps)
-            appSelectionAdapter.notifyDataSetChanged()
-            sendBroadcast(android.content.Intent("com.tvlauncher.REFRESH_SHORTCUTS"))
+            if (!appManager.canAddMoreSelections(selectedApps.size)) {
+                Toast.makeText(
+                    this,
+                    getString(R.string.slot_limit_reached, AppManager.MAX_SLOTS),
+                    Toast.LENGTH_LONG
+                ).show()
+            } else {
+                selectedApps.add(autoSelectId)
+                appSelectionAdapter.updateSelectionState()
+            }
         }
         pendingAutoSelectId = null
     }
 
     private fun handleShortcutUnselect(appIdentifier: String) {
-        if (!appIdentifier.contains(":")) {
+        if (!AppIdentifier.isShortcut(appIdentifier)) {
             return
         }
-        val parts = appIdentifier.split(":", limit = 2)
-        if (parts.size != 2) {
-            return
-        }
-        val packageName = parts[0]
-        val shortcutId = parts[1]
-        appManager.unpinShortcut(packageName, shortcutId)
-        appManager.saveSelectedApps(selectedApps)
-        appManager.clearCache()
-        refreshAppList()
-        sendBroadcast(android.content.Intent("com.tvlauncher.REFRESH_SHORTCUTS"))
+        val decoded = AppIdentifier.decode(appIdentifier)
+        val shortcutId = decoded.shortcutId ?: return
+        appManager.unpinShortcut(decoded.packageName, shortcutId)
     }
-    
+
     private fun setupClickListeners() {
         doneButton.setOnClickListener {
-            appManager.saveSelectedApps(selectedApps)
-            // Clear cache before finishing to free memory
-            appManager.clearCache()
+            appManager.saveSelectedApps(selectedApps.toList())
+            appManager.invalidateAppListCache()
+            LauncherBroadcast.refreshHome(this)
             setResult(RESULT_OK)
             finish()
         }
@@ -145,40 +156,27 @@ class AppSelectionActivity : AppCompatActivity() {
         shortcutToggle.setOnCheckedChangeListener { _, isChecked ->
             appManager.setShortcutSupportEnabled(isChecked)
             if (!isChecked) {
-                val toRemove = selectedApps.filter { it.contains(":") }
-                selectedApps.removeAll(toRemove)
-                appManager.saveSelectedApps(selectedApps)
-                sendBroadcast(android.content.Intent("com.tvlauncher.REFRESH_SHORTCUTS"))
-                appManager.clearCache()
-                System.gc()
-                System.runFinalization()
+                val toRemove = selectedApps.filter { AppIdentifier.isShortcut(it) }
+                selectedApps.removeAll(toRemove.toSet())
             }
-            refreshAppList()
+            reloadAppList(invalidateCache = true)
+            LauncherBroadcast.refreshHome(this)
         }
     }
-    
-    override fun onPause() {
-        super.onPause()
-        // Clear cache when paused to free memory
-        appManager.clearCache()
-    }
-    
+
     override fun onDestroy() {
         super.onDestroy()
         try {
             unregisterReceiver(refreshReceiver)
-        } catch (e: Exception) {
-            // Receiver might not be registered
+        } catch (_: Exception) {
         }
     }
-    
+
     private fun calculateSpanCount(): Int {
         val displayMetrics = resources.displayMetrics
         val screenWidthDp = displayMetrics.widthPixels / displayMetrics.density
-        // Aim for items around 180-200dp wide
         val itemWidthDp = 180f
         val spanCount = (screenWidthDp / itemWidthDp).toInt()
-        // Ensure at least 3 columns and at most 6 columns
         return spanCount.coerceIn(3, 6)
     }
 }

@@ -2,4 +2,11 @@
     <!-- Base application theme. -->
     <style name="Theme.TVLauncher" parent="Theme.AppCompat.Light.NoActionBar">
     </style>
+
+    <style name="Theme.TVLauncher.AboutDialog" parent="Theme.AppCompat.Dialog.Alert">
+        <item name="android:windowBackground">@color/dark_gray</item>
+        <item name="android:textColorPrimary">@color/white</item>
+        <item name="android:textColorSecondary">@color/light_gray</item>
+        <item name="colorAccent">@color/teal_200</item>
+    </style>
 </resources>

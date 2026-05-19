@@ -1,136 +1,155 @@
 package com.tvlauncher
 
-import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.view.View
+import android.view.LayoutInflater
 import android.widget.Button
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
+import android.widget.Toast
+import androidx.appcompat.widget.SwitchCompat
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
-    
+
     private lateinit var appSlots: RecyclerView
-    private lateinit var emptyText: TextView
     private lateinit var settingsButton: Button
-    private lateinit var clockText: TextView
     private lateinit var aboutButton: TextView
     private lateinit var appManager: AppManager
     private lateinit var appSlotAdapter: AppSlotAdapter
-    private val clockHandler = Handler(Looper.getMainLooper())
-    private var clockRunnable: Runnable? = null
-    private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-    
+    /** Small bitmaps on home — avoids holding full-resolution launcher icons in RAM. */
+    private val slotIconSizePx: Int by lazy { (60 * resources.displayMetrics.density).toInt() }
+
     private val refreshReceiver = object : android.content.BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == "com.tvlauncher.REFRESH_SHORTCUTS") {
-                // Clear cache and reload
-                appManager.clearCache()
+        override fun onReceive(context: android.content.Context?, intent: Intent?) {
+            if (intent?.action == LauncherBroadcast.ACTION_REFRESH_HOME) {
+                appManager.invalidateSelectionCache()
+                appManager.invalidateAppListCache()
                 loadAppSlots()
             }
         }
     }
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        
-        // Ensure the launcher doesn't prevent the TV from sleeping
+
         window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        
+
         appSlots = findViewById(R.id.appSlots)
-        emptyText = findViewById(R.id.emptyText)
         settingsButton = findViewById(R.id.settingsButton)
-        clockText = findViewById(R.id.clockText)
         aboutButton = findViewById(R.id.aboutButton)
-        
+
         appManager = AppManager(this)
         setupRecyclerView()
         setupClickListeners()
         loadAppSlots()
-        startClock()
-        
-        // Register broadcast receiver for shortcut refresh
-        val filter = android.content.IntentFilter("com.tvlauncher.REFRESH_SHORTCUTS")
-        registerReceiver(refreshReceiver, filter)
+
+        ContextCompat.registerReceiver(
+            this,
+            refreshReceiver,
+            android.content.IntentFilter(LauncherBroadcast.ACTION_REFRESH_HOME),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
     }
-    
+
     private fun setupRecyclerView() {
         val slotSizePx = calculateSlotSizePx()
         appSlotAdapter = AppSlotAdapter(
             mutableListOf(),
-            onSlotClick = { position ->
-                openAppSelection(position)
-            },
-            slotSizePx = slotSizePx
+            onSlotClick = { openAppSelection() },
+            onSlotLongClick = { position -> confirmRemoveApp(position) },
+            slotSizePx = slotSizePx,
+            iconSizePx = slotIconSizePx
         )
-        
-        val layoutManager = GridLayoutManager(this@MainActivity, 5)
-        appSlots.layoutManager = layoutManager
+
+        val columns = HOME_GRID_COLUMNS
+        appSlots.layoutManager = GridLayoutManager(this, columns)
         appSlots.adapter = appSlotAdapter
         appSlots.setHasFixedSize(true)
-        // Reduce RecyclerView cache sizes for lower memory usage
-        appSlots.setItemViewCacheSize(2)
+        appSlots.setItemViewCacheSize(0)
         appSlots.recycledViewPool.setMaxRecycledViews(0, 2)
     }
-    
-    private fun setupClickListeners() {
-        settingsButton.setOnClickListener {
-            openAndroidSettings()
-        }
 
-        aboutButton.setOnClickListener {
-            showAboutDialog()
-        }
-        
+    private fun setupClickListeners() {
+        settingsButton.setOnClickListener { openAndroidSettings() }
+        aboutButton.setOnClickListener { showAboutDialog() }
         settingsButton.isFocusable = false
         aboutButton.isFocusable = true
-        findViewById<Button>(R.id.addAppsButton).visibility = View.GONE
-        findViewById<Button>(R.id.reorderButton).visibility = View.GONE
-        findViewById<Button>(R.id.clearAllButton).visibility = View.GONE
-        findViewById<TextView>(R.id.reorderStatusText).visibility = View.GONE
     }
 
     private fun showAboutDialog() {
-        val versionName = try {
-            packageManager.getPackageInfo(packageName, 0).versionName
-        } catch (e: Exception) {
-            "1.2"
+        val versionName = getVersionName()
+        val message = getString(R.string.about_message, versionName, getString(R.string.github_repo_url))
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_about, null)
+        dialogView.findViewById<TextView>(R.id.aboutMessageText).text = message
+        val autoUpdateSwitch = dialogView.findViewById<SwitchCompat>(R.id.autoUpdateSwitch)
+        autoUpdateSwitch.isChecked = AppUpdateManager.isAutoUpdateEnabled(this)
+        autoUpdateSwitch.setOnCheckedChangeListener { _, isChecked ->
+            AppUpdateManager.setAutoUpdateEnabled(this, isChecked)
+            val hint = if (isChecked) R.string.update_auto_on else R.string.update_auto_off
+            Toast.makeText(this, hint, Toast.LENGTH_SHORT).show()
         }
-        
-        val message = """
-            TV Launcher
-            Version $versionName
 
-            Free and open source.
-            License: CC BY-NC 4.0 (no selling).
-
-            https://github.com/wiiguy
-        """.trimIndent()
-
-        AlertDialog.Builder(this)
-            .setTitle("About")
-            .setMessage(message)
-            .setPositiveButton("Open GitHub") { _, _ ->
-                openUrl("https://github.com/wiiguy")
+        AlertDialog.Builder(this, R.style.Theme_TVLauncher_AboutDialog)
+            .setTitle(R.string.about_title)
+            .setView(dialogView)
+            .setPositiveButton(R.string.about_open_github) { _, _ ->
+                openUrl(getString(R.string.github_repo_url))
             }
-            .setNegativeButton("Close", null)
+            .setNeutralButton(R.string.update_check_now) { _, _ ->
+                checkForUpdatesManually()
+            }
+            .setNegativeButton(R.string.about_close, null)
             .show()
+    }
+
+    private fun checkForUpdatesManually() {
+        Toast.makeText(this, R.string.update_checking, Toast.LENGTH_SHORT).show()
+        Thread {
+            val result = AppUpdateManager.checkDownloadAndInstall(
+                applicationContext,
+                ignoreAutoUpdateSetting = true
+            )
+            runOnUiThread {
+                val message = when (result) {
+                    AppUpdateManager.UpdateResult.NoUpdate -> getString(R.string.update_none)
+                    AppUpdateManager.UpdateResult.InstallStarted -> getString(R.string.update_ready)
+                    AppUpdateManager.UpdateResult.InstallPermissionNeeded ->
+                        getString(R.string.update_permission_needed)
+                    AppUpdateManager.UpdateResult.DownloadFailed -> getString(R.string.update_failed)
+                    AppUpdateManager.UpdateResult.Skipped -> getString(R.string.update_disabled)
+                }
+                Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+            }
+        }.start()
+    }
+
+    private fun getVersionName(): String {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                packageManager.getPackageInfo(
+                    packageName,
+                    PackageManager.PackageInfoFlags.of(0)
+                ).versionName
+            } else {
+                @Suppress("DEPRECATION")
+                packageManager.getPackageInfo(packageName, 0).versionName
+            }
+        } catch (_: Exception) {
+            BuildConfig.VERSION_NAME
+        } ?: BuildConfig.VERSION_NAME
     }
 
     private fun openUrl(url: String) {
         try {
-            val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url))
-            startActivity(intent)
-        } catch (e: Exception) {
-            // Ignore if no browser is available
+            startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url)))
+        } catch (_: Exception) {
         }
     }
 
@@ -138,58 +157,49 @@ class MainActivity : AppCompatActivity() {
         val displayMetrics = resources.displayMetrics
         val screenWidthPx = displayMetrics.widthPixels
         val density = displayMetrics.density
+        val columns = HOME_GRID_COLUMNS
 
         val sideMarginPx = (16 * density).toInt() * 2
         val recyclerPaddingPx = (8 * density).toInt() * 2
         val itemMarginPx = (8 * density).toInt()
-        val totalItemMarginsPx = itemMarginPx * 2 * 5
+        val totalItemMarginsPx = itemMarginPx * 2 * columns
 
         val availablePx = screenWidthPx - sideMarginPx - recyclerPaddingPx - totalItemMarginsPx
-        val rawSize = availablePx / 5
-        val minSize = (120 * density).toInt()
-        return rawSize.coerceAtLeast(minSize)
+        val rawSize = availablePx / columns
+        val minSize = (96 * density).toInt()
+        val maxSize = (120 * density).toInt()
+        return rawSize.coerceIn(minSize, maxSize)
     }
-    
+
     private fun openAndroidSettings() {
         try {
-            val settingsIntent = Intent(android.provider.Settings.ACTION_SETTINGS)
-            startActivity(settingsIntent)
-        } catch (e: Exception) {
+            startActivity(Intent(android.provider.Settings.ACTION_SETTINGS))
+        } catch (_: Exception) {
             try {
-                val tvSettingsIntent = Intent("android.settings.TV_SETTINGS")
-                startActivity(tvSettingsIntent)
-            } catch (e2: Exception) {
+                startActivity(Intent("android.settings.TV_SETTINGS"))
+            } catch (_: Exception) {
                 try {
-                    val systemSettingsIntent = Intent(android.provider.Settings.ACTION_DEVICE_INFO_SETTINGS)
-                    startActivity(systemSettingsIntent)
-                } catch (e3: Exception) {
-                    // All settings intents failed
+                    startActivity(Intent(android.provider.Settings.ACTION_DEVICE_INFO_SETTINGS))
+                } catch (_: Exception) {
                 }
             }
         }
     }
-    
+
     private fun loadAppSlots() {
         val selectedApps = appManager.getSelectedAppInfos()
-        val maxSlots = appSlotAdapter.getMaxSlots()
-        
+
         val slots = mutableListOf<AppSlotAdapter.AppSlot>()
-        
         selectedApps.forEach { app ->
             slots.add(AppSlotAdapter.AppSlot(app, false))
         }
-        
-        // Always add at least one empty slot if we have space
-        if (slots.size < maxSlots) {
-            slots.add(AppSlotAdapter.AppSlot(null, true))
-        }
-        
+
+        // Always show "+" so user can add or change apps (even when 8 are already pinned)
+        slots.add(AppSlotAdapter.AppSlot(null, true))
+
         appSlotAdapter.updateSlots(slots)
-        
-        // Always show the app slots, never show empty text
-        emptyText.visibility = View.GONE
-        appSlots.visibility = View.VISIBLE
-        
+        appSlots.visibility = android.view.View.VISIBLE
+
         appSlots.post {
             if (appSlots.childCount > 0) {
                 appSlots.getChildAt(0).requestFocus()
@@ -197,78 +207,47 @@ class MainActivity : AppCompatActivity() {
             settingsButton.isFocusable = true
         }
     }
-    
-    private fun openAppSelection(@Suppress("UNUSED_PARAMETER") slotPosition: Int) {
-        val intent = Intent(this, AppSelectionActivity::class.java)
-        startActivity(intent)
+
+    private fun confirmRemoveApp(position: Int) {
+        val slot = appSlotAdapter.slots.getOrNull(position) ?: return
+        val app = slot.appInfo ?: return
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.remove_app_title)
+            .setMessage(getString(R.string.remove_app_message, app.getDisplayName()))
+            .setPositiveButton(R.string.remove) { _, _ ->
+                appManager.removeSelectedApp(AppIdentifier.encode(app))
+                appManager.invalidateSelectionCache()
+                LauncherBroadcast.refreshHome(this)
+                loadAppSlots()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
     }
-    
+
+    private fun openAppSelection() {
+        startActivity(Intent(this, AppSelectionActivity::class.java))
+    }
+
     override fun onResume() {
         super.onResume()
         loadAppSlots()
-        startClock()
     }
-    
-    override fun onPause() {
-        super.onPause()
-        stopClock()
-        // Clear cache when paused to free memory
-        appManager.clearCache()
-        // Allow the TV to go to sleep properly
-    }
-    
+
     override fun onStop() {
         super.onStop()
-        stopClock()
-        unloadLauncher()
+        appManager.invalidateAppListCache()
     }
-    
+
     override fun onDestroy() {
         super.onDestroy()
-        stopClock()
         try {
             unregisterReceiver(refreshReceiver)
-        } catch (e: Exception) {
-            // Receiver might not be registered
+        } catch (_: Exception) {
         }
     }
-    
-    private fun startClock() {
-        updateClock()
-        if (clockRunnable == null) {
-            clockRunnable = object : Runnable {
-                override fun run() {
-                    updateClock()
-                    clockHandler.postDelayed(this, 60000) // Update every minute
-                }
-            }
-        }
-        clockHandler.post(clockRunnable!!)
+
+    companion object {
+        private const val HOME_GRID_COLUMNS = 5
     }
-    
-    private fun stopClock() {
-        clockRunnable?.let {
-            clockHandler.removeCallbacks(it)
-            clockRunnable = null
-        }
-        // Clear clock text to free memory when not visible
-        if (::clockText.isInitialized) {
-            clockText.text = ""
-        }
-    }
-    
-    private fun updateClock() {
-        if (::clockText.isInitialized) {
-            clockText.text = timeFormat.format(java.util.Date())
-        }
-    }
-    
-    private fun unloadLauncher() {
-        // Only clear app manager cache to free memory
-        appManager.clearCache()
-        
-        // Force garbage collection for cleanup
-        System.gc()
-    }
-    
 }
