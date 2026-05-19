@@ -29,6 +29,7 @@ jobs:
       - name: Install Android SDK components
         run: |
           sdkmanager "platforms;android-34" "build-tools;34.0.0"
+          echo "${ANDROID_SDK_ROOT}/build-tools/34.0.0" >> "$GITHUB_PATH"
 
       - name: Set version from tag
         run: |
@@ -67,7 +68,14 @@ jobs:
           PATCH=$(echo "$TAG" | cut -d. -f3)
           PATCH=${PATCH:-0}
           VERSION_CODE=$((MAJOR * 10000 + MINOR * 100 + PATCH))
-          BADGING=$(aapt dump badging app/build/outputs/apk/release/app-release.apk)
+          SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          AAPT="${SDK_ROOT}/build-tools/34.0.0/aapt"
+          if [ ! -x "$AAPT" ]; then
+            echo "aapt not found at $AAPT"
+            ls -la "${SDK_ROOT}/build-tools/" || true
+            exit 1
+          fi
+          BADGING=$("$AAPT" dump badging app/build/outputs/apk/release/app-release.apk)
           echo "$BADGING" | grep -F "versionName='${TAG}'"
           echo "$BADGING" | grep -F "versionCode='${VERSION_CODE}'"
 
