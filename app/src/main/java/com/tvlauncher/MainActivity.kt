@@ -14,8 +14,6 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.RadioButton
-import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -144,11 +142,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showWallpaperDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_wallpaper_settings, null)
-        val radioGroup = dialogView.findViewById<RadioGroup>(R.id.wallpaperModeGroup)
-        val radioSolid = dialogView.findViewById<RadioButton>(R.id.radioModeSolid)
-        val radioReddit = dialogView.findViewById<RadioButton>(R.id.radioModeReddit)
-        val radioCustom = dialogView.findViewById<RadioButton>(R.id.radioModeCustom)
-
+        val sourceButton = dialogView.findViewById<TextView>(R.id.sourceSelectorButton)
         val redditContainer = dialogView.findViewById<LinearLayout>(R.id.redditOptionsContainer)
         val categoryButton = dialogView.findViewById<TextView>(R.id.categorySelectorButton)
         val intervalButton = dialogView.findViewById<TextView>(R.id.intervalSelectorButton)
@@ -157,14 +151,48 @@ class MainActivity : AppCompatActivity() {
         val customUrlEdit = dialogView.findViewById<EditText>(R.id.customUrlEdit)
         val dimSwitch = dialogView.findViewById<SwitchCompat>(R.id.dimOverlaySwitch)
 
+        // Sources setup
+        val sources = listOf(
+            WallpaperManager.MODE_SOLID to getString(R.string.wallpaper_mode_solid),
+            WallpaperManager.MODE_ONLINE to getString(R.string.wallpaper_mode_reddit),
+            WallpaperManager.MODE_CUSTOM to getString(R.string.wallpaper_mode_custom)
+        )
+        var currentMode = WallpaperManager.getWallpaperMode(this)
+        var selectedSourceIndex = sources.indexOfFirst { it.first == currentMode }.coerceAtLeast(0)
+
+        fun updateVisibility(mode: String) {
+            redditContainer.visibility = if (mode == WallpaperManager.MODE_ONLINE) View.VISIBLE else View.GONE
+            customUrlContainer.visibility = if (mode == WallpaperManager.MODE_CUSTOM) View.VISIBLE else View.GONE
+        }
+
+        sourceButton.text = sources[selectedSourceIndex].second
+        updateVisibility(currentMode)
+
+        sourceButton.setOnClickListener {
+            AlertDialog.Builder(this, R.style.Theme_TVLauncher_AboutDialog)
+                .setTitle(R.string.wallpaper_mode)
+                .setSingleChoiceItems(
+                    sources.map { it.second }.toTypedArray(),
+                    selectedSourceIndex
+                ) { dialog, which ->
+                    selectedSourceIndex = which
+                    currentMode = sources[which].first
+                    sourceButton.text = sources[which].second
+                    updateVisibility(currentMode)
+                    dialog.dismiss()
+                }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
+        }
+
         // Categories setup
         val categories = listOf(
-            WallpaperManager.CATEGORY_GENERAL to getString(R.string.wallpaper_category_general),
             WallpaperManager.CATEGORY_NATURE to getString(R.string.wallpaper_category_nature),
-            WallpaperManager.CATEGORY_CARS to getString(R.string.wallpaper_category_cars),
-            WallpaperManager.CATEGORY_ANIME to getString(R.string.wallpaper_category_anime),
+            WallpaperManager.CATEGORY_GENERAL to getString(R.string.wallpaper_category_general),
             WallpaperManager.CATEGORY_SPACE to getString(R.string.wallpaper_category_space),
-            WallpaperManager.CATEGORY_ARCHITECTURE to getString(R.string.wallpaper_category_architecture)
+            WallpaperManager.CATEGORY_ARCHITECTURE to getString(R.string.wallpaper_category_architecture),
+            WallpaperManager.CATEGORY_CARS to getString(R.string.wallpaper_category_cars),
+            WallpaperManager.CATEGORY_ANIME to getString(R.string.wallpaper_category_anime)
         )
         val initialCategoryKey = WallpaperManager.getCategory(this)
         var selectedCategoryIndex = categories.indexOfFirst { it.first == initialCategoryKey }.coerceAtLeast(0)
@@ -212,40 +240,12 @@ class MainActivity : AppCompatActivity() {
         customUrlEdit.setText(WallpaperManager.getCustomUrl(this))
         dimSwitch.isChecked = WallpaperManager.isDimOverlayEnabled(this)
 
-        fun updateVisibility(mode: String) {
-            redditContainer.visibility = if (mode == WallpaperManager.MODE_REDDIT) View.VISIBLE else View.GONE
-            customUrlContainer.visibility = if (mode == WallpaperManager.MODE_CUSTOM) View.VISIBLE else View.GONE
-        }
-
-        val initialMode = WallpaperManager.getWallpaperMode(this)
-        when (initialMode) {
-            WallpaperManager.MODE_SOLID -> radioSolid.isChecked = true
-            WallpaperManager.MODE_REDDIT -> radioReddit.isChecked = true
-            WallpaperManager.MODE_CUSTOM -> radioCustom.isChecked = true
-        }
-        updateVisibility(initialMode)
-
-        radioGroup.setOnCheckedChangeListener { _, checkedId ->
-            val mode = when (checkedId) {
-                R.id.radioModeReddit -> WallpaperManager.MODE_REDDIT
-                R.id.radioModeCustom -> WallpaperManager.MODE_CUSTOM
-                else -> WallpaperManager.MODE_SOLID
-            }
-            updateVisibility(mode)
-        }
-
-        fun saveWallpaperSettings(): String {
-            val selectedMode = when (radioGroup.checkedRadioButtonId) {
-                R.id.radioModeReddit -> WallpaperManager.MODE_REDDIT
-                R.id.radioModeCustom -> WallpaperManager.MODE_CUSTOM
-                else -> WallpaperManager.MODE_SOLID
-            }
-            WallpaperManager.setWallpaperMode(this, selectedMode)
+        fun saveWallpaperSettings() {
+            WallpaperManager.setWallpaperMode(this, currentMode)
             WallpaperManager.setCategory(this, categories[selectedCategoryIndex].first)
             WallpaperManager.setInterval(this, intervals[selectedIntervalIndex].first)
             WallpaperManager.setCustomUrl(this, customUrlEdit.text.toString().trim())
             WallpaperManager.setDimOverlayEnabled(this, dimSwitch.isChecked)
-            return selectedMode
         }
 
         AlertDialog.Builder(this, R.style.Theme_TVLauncher_AboutDialog)

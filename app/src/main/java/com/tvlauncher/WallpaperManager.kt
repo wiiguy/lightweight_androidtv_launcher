@@ -16,13 +16,16 @@ import java.util.concurrent.Executors
 
 /**
  * High-performance, zero-dependency Wallpaper Manager with downsampling for low-RAM devices.
- * Fetches HD wallpapers via Wallhaven / Reddit public endpoints with offline disk caching.
+ * Uses resilient multi-tier fetching (Wallhaven, Bing Daily UHD, Picsum, Reddit) with offline disk caching.
  */
 object WallpaperManager {
 
     const val MODE_SOLID = "solid"
-    const val MODE_REDDIT = "reddit"
+    const val MODE_ONLINE = "online"
     const val MODE_CUSTOM = "custom"
+
+    // Backwards compatibility alias
+    const val MODE_REDDIT = "online"
 
     const val CATEGORY_GENERAL = "wallpaper"
     const val CATEGORY_NATURE = "nature"
@@ -50,17 +53,19 @@ object WallpaperManager {
 
     fun getWallpaperMode(context: Context): String {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        return prefs.getString(PREF_MODE, MODE_SOLID) ?: MODE_SOLID
+        val mode = prefs.getString(PREF_MODE, MODE_SOLID) ?: MODE_SOLID
+        return if (mode == "reddit") MODE_ONLINE else mode
     }
 
     fun setWallpaperMode(context: Context, mode: String) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        prefs.edit().putString(PREF_MODE, mode).apply()
+        val normalized = if (mode == "reddit") MODE_ONLINE else mode
+        prefs.edit().putString(PREF_MODE, normalized).apply()
     }
 
     fun getCategory(context: Context): String {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        return prefs.getString(PREF_CATEGORY, CATEGORY_GENERAL) ?: CATEGORY_GENERAL
+        return prefs.getString(PREF_CATEGORY, CATEGORY_NATURE) ?: CATEGORY_NATURE
     }
 
     fun setCategory(context: Context, category: String) {
@@ -127,35 +132,61 @@ object WallpaperManager {
         val cacheFile = File(context.cacheDir, CACHE_FILE_NAME)
         if (!force && cacheFile.exists() && (now - lastFetch < interval)) {
             val cached = loadCachedWallpaper(context, targetWidth, targetHeight)
-            onComplete(true, cached)
-            return
+            if (cached != null) {
+                onComplete(true, cached)
+                return
+            }
         }
 
         executor.execute {
-            val imageUrl = when (mode) {
-                MODE_REDDIT -> fetchOnlineWallpaperUrl(getCategory(context))
-                MODE_CUSTOM -> getCustomUrl(context)
-                else -> null
+            val category = getCategory(context)
+            val success = when (mode) {
+                MODE_ONLINE -> fetchAndCacheOnlineWallpaper(context, category)
+                MODE_CUSTOM -> {
+                    val url = getCustomUrl(context)
+                    if (url.isNotEmpty()) downloadAndCacheImage(context, url) else false
+                }
+                else -> false
             }
 
-            if (imageUrl.isNullOrEmpty()) {
-                mainHandler.post { onComplete(false, null) }
-                return@execute
-            }
-
-            val success = downloadAndCacheImage(context, imageUrl)
             if (success) {
                 prefs.edit().putLong(PREF_LAST_FETCH_TIME, now).apply()
                 val drawable = loadCachedWallpaper(context, targetWidth, targetHeight)
                 mainHandler.post { onComplete(true, drawable) }
             } else {
-                mainHandler.post { onComplete(false, null) }
+                val fallbackCached = loadCachedWallpaper(context, targetWidth, targetHeight)
+                mainHandler.post { onComplete(fallbackCached != null, fallbackCached) }
             }
         }
     }
 
-    private fun fetchOnlineWallpaperUrl(category: String): String? {
-        return fetchFromWallhaven(category) ?: fetchFromRedditFallback(category)
+    private fun fetchAndCacheOnlineWallpaper(context: Context, category: String): Boolean {
+        // Tier 1: Wallhaven HD category query
+        val wallhavenUrl = fetchFromWallhaven(category)
+        if (!wallhavenUrl.isNullOrEmpty() && downloadAndCacheImage(context, wallhavenUrl)) {
+            return true
+        }
+
+        // Tier 2: Bing Daily Wallpaper API (Always reliable high-res 1080p landscape photography)
+        val bingUrl = fetchFromBing()
+        if (!bingUrl.isNullOrEmpty() && downloadAndCacheImage(context, bingUrl)) {
+            return true
+        }
+
+        // Tier 3: Picsum Photos direct seed
+        val picsumSeed = (System.currentTimeMillis() % 1000).toString()
+        val picsumUrl = "https://picsum.photos/seed/$picsumSeed/1920/1080"
+        if (downloadAndCacheImage(context, picsumUrl)) {
+            return true
+        }
+
+        // Tier 4: Reddit API fallback
+        val redditUrl = fetchFromRedditFallback(category)
+        if (!redditUrl.isNullOrEmpty() && downloadAndCacheImage(context, redditUrl)) {
+            return true
+        }
+
+        return false
     }
 
     private fun fetchFromWallhaven(category: String): String? {
@@ -185,6 +216,30 @@ object WallpaperManager {
             val randomIndex = (0 until dataArray.length()).random()
             val item = dataArray.getJSONObject(randomIndex)
             item.optString("path", null)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun fetchFromBing(): String? {
+        return try {
+            val endpoint = "https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=8&mkt=en-US"
+            val url = URL(endpoint)
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                connectTimeout = 8000
+                readTimeout = 8000
+                setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+            }
+
+            if (conn.responseCode != 200) return null
+            val responseText = conn.inputStream.bufferedReader().use { it.readText() }
+            val json = JSONObject(responseText)
+            val images = json.getJSONArray("images")
+            if (images.length() == 0) return null
+
+            val randomImage = images.getJSONObject((0 until images.length()).random())
+            val relUrl = randomImage.getString("url")
+            "https://www.bing.com$relUrl"
         } catch (_: Exception) {
             null
         }
@@ -259,6 +314,11 @@ object WallpaperManager {
                     FileOutputStream(tempFile).use { output ->
                         input.copyTo(output)
                     }
+                }
+
+                if (!tempFile.exists() || tempFile.length() < 1024) {
+                    tempFile.delete()
+                    return false
                 }
 
                 val destFile = File(context.cacheDir, CACHE_FILE_NAME)

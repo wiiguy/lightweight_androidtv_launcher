@@ -14,53 +14,31 @@
         android:paddingEnd="24dp"
         android:paddingBottom="20dp">
 
-        <!-- Source Selector: Radio Group -->
+        <!-- Wallpaper Source Tile Selector -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/wallpaper_mode"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/sourceSelectorButton"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/header_button_background"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
             android:textColor="@color/text_primary"
             android:textSize="14sp"
             android:textStyle="bold" />
 
-        <RadioGroup
-            android:id="@+id/wallpaperModeGroup"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp">
-
-            <RadioButton
-                android:id="@+id/radioModeSolid"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:buttonTint="@color/accent"
-                android:focusable="true"
-                android:text="@string/wallpaper_mode_solid"
-                android:textColor="@color/text_primary"
-                android:textSize="13sp" />
-
-            <RadioButton
-                android:id="@+id/radioModeReddit"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:buttonTint="@color/accent"
-                android:focusable="true"
-                android:text="@string/wallpaper_mode_reddit"
-                android:textColor="@color/text_primary"
-                android:textSize="13sp" />
-
-            <RadioButton
-                android:id="@+id/radioModeCustom"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:buttonTint="@color/accent"
-                android:focusable="true"
-                android:text="@string/wallpaper_mode_custom"
-                android:textColor="@color/text_primary"
-                android:textSize="13sp" />
-        </RadioGroup>
-
-        <!-- Reddit Options Container -->
+        <!-- Online HD Category Container -->
         <LinearLayout
             android:id="@+id/redditOptionsContainer"
             android:layout_width="match_parent"
@@ -80,14 +58,14 @@
             <TextView
                 android:id="@+id/categorySelectorButton"
                 android:layout_width="match_parent"
-                android:layout_height="44dp"
+                android:layout_height="46dp"
                 android:layout_marginTop="6dp"
                 android:background="@drawable/header_button_background"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center_vertical"
-                android:paddingStart="14dp"
-                android:paddingEnd="14dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
                 android:textColor="@color/text_primary"
                 android:textSize="13sp" />
 
@@ -103,14 +81,14 @@
             <TextView
                 android:id="@+id/intervalSelectorButton"
                 android:layout_width="match_parent"
-                android:layout_height="44dp"
+                android:layout_height="46dp"
                 android:layout_marginTop="6dp"
                 android:background="@drawable/header_button_background"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center_vertical"
-                android:paddingStart="14dp"
-                android:paddingEnd="14dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
                 android:textColor="@color/text_primary"
                 android:textSize="13sp" />
         </LinearLayout>
@@ -135,7 +113,7 @@
             <EditText
                 android:id="@+id/customUrlEdit"
                 android:layout_width="match_parent"
-                android:layout_height="44dp"
+                android:layout_height="46dp"
                 android:layout_marginTop="6dp"
                 android:background="@drawable/header_button_background"
                 android:focusable="true"
