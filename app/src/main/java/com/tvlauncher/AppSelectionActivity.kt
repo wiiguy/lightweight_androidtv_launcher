@@ -21,18 +21,25 @@ class AppSelectionActivity : AppCompatActivity() {
         const val EXTRA_AUTO_SELECT_ID = "com.tvlauncher.EXTRA_AUTO_SELECT_ID"
     }
 
+    private enum class FilterTab { ALL, SELECTED, SHORTCUTS }
+
     private lateinit var appList: RecyclerView
     private lateinit var doneButton: Button
     private lateinit var loadingProgress: ProgressBar
-    private lateinit var titleText: TextView
     private lateinit var searchEdit: EditText
+    private lateinit var selectedCountBadge: TextView
+    private lateinit var chipAll: TextView
+    private lateinit var chipSelected: TextView
+    private lateinit var chipShortcuts: TextView
     private lateinit var appManager: AppManager
     private lateinit var appSelectionAdapter: AppSelectionAdapter
     private lateinit var shortcutToggle: androidx.appcompat.widget.SwitchCompat
+
+    private var currentFilter = FilterTab.ALL
     private val selectedApps = linkedSetOf<String>()
     private var allLoadedApps = listOf<AppInfo>()
     private var pendingAutoSelectId: String? = null
-    private val selectionIconSizePx: Int by lazy { (60 * resources.displayMetrics.density).toInt() }
+    private val selectionIconSizePx: Int by lazy { (68 * resources.displayMetrics.density).toInt() }
 
     private val refreshReceiver = object : android.content.BroadcastReceiver() {
         override fun onReceive(context: android.content.Context?, intent: Intent?) {
@@ -49,8 +56,11 @@ class AppSelectionActivity : AppCompatActivity() {
         appList = findViewById(R.id.appList)
         doneButton = findViewById(R.id.doneButton)
         loadingProgress = findViewById(R.id.loadingProgress)
-        titleText = findViewById(R.id.titleText)
         searchEdit = findViewById(R.id.searchEdit)
+        selectedCountBadge = findViewById(R.id.selectedCountBadge)
+        chipAll = findViewById(R.id.chipAll)
+        chipSelected = findViewById(R.id.chipSelected)
+        chipShortcuts = findViewById(R.id.chipShortcuts)
         shortcutToggle = findViewById(R.id.shortcutToggle)
 
         appManager = AppManager(this)
@@ -58,7 +68,7 @@ class AppSelectionActivity : AppCompatActivity() {
         shortcutToggle.isChecked = appManager.isShortcutSupportEnabled()
         pendingAutoSelectId = intent.getStringExtra(EXTRA_AUTO_SELECT_ID)?.let { AppIdentifier.normalize(it) }
 
-        titleText.text = getString(R.string.select_apps_max, AppManager.MAX_SLOTS)
+        updateCountBadge()
 
         val spanCount = calculateSpanCount()
         appList.layoutManager = GridLayoutManager(this, spanCount)
@@ -74,6 +84,7 @@ class AppSelectionActivity : AppCompatActivity() {
 
         setupClickListeners()
         setupSearch()
+        setupFilterChips()
         reloadAppList(invalidateCache = false)
 
         ContextCompat.registerReceiver(
@@ -82,6 +93,24 @@ class AppSelectionActivity : AppCompatActivity() {
             android.content.IntentFilter(LauncherBroadcast.ACTION_REFRESH_APP_SELECTION),
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
+    }
+
+    private fun setupFilterChips() {
+        chipAll.setOnClickListener { setFilterTab(FilterTab.ALL) }
+        chipSelected.setOnClickListener { setFilterTab(FilterTab.SELECTED) }
+        chipShortcuts.setOnClickListener { setFilterTab(FilterTab.SHORTCUTS) }
+    }
+
+    private fun setFilterTab(tab: FilterTab) {
+        currentFilter = tab
+        chipAll.isSelected = tab == FilterTab.ALL
+        chipSelected.isSelected = tab == FilterTab.SELECTED
+        chipShortcuts.isSelected = tab == FilterTab.SHORTCUTS
+        filterApps(searchEdit.text.toString())
+    }
+
+    private fun updateCountBadge() {
+        selectedCountBadge.text = getString(R.string.selected_badge, selectedApps.size, AppManager.MAX_SLOTS)
     }
 
     private fun setupSearch() {
@@ -96,10 +125,19 @@ class AppSelectionActivity : AppCompatActivity() {
 
     private fun filterApps(query: String) {
         val trimmed = query.trim().lowercase()
+        val baseList = when (currentFilter) {
+            FilterTab.ALL -> allLoadedApps
+            FilterTab.SELECTED -> allLoadedApps.filter { app ->
+                val id = AppIdentifier.normalize(appManager.getAppIdentifier(app))
+                selectedApps.contains(id)
+            }
+            FilterTab.SHORTCUTS -> allLoadedApps.filter { it.isShortcut }
+        }
+
         val filtered = if (trimmed.isEmpty()) {
-            allLoadedApps
+            baseList
         } else {
-            allLoadedApps.filter { app ->
+            baseList.filter { app ->
                 app.getDisplayName().lowercase().contains(trimmed) ||
                     app.packageName.lowercase().contains(trimmed)
             }
@@ -123,6 +161,10 @@ class AppSelectionActivity : AppCompatActivity() {
         } else {
             selectedApps.remove(normalized)
             handleShortcutUnselect(normalized)
+        }
+        updateCountBadge()
+        if (currentFilter == FilterTab.SELECTED) {
+            filterApps(searchEdit.text.toString())
         }
     }
 
@@ -160,6 +202,7 @@ class AppSelectionActivity : AppCompatActivity() {
                 ).show()
             } else {
                 selectedApps.add(autoSelectId)
+                updateCountBadge()
                 appSelectionAdapter.updateSelectionState()
             }
         }
@@ -189,6 +232,7 @@ class AppSelectionActivity : AppCompatActivity() {
             if (!isChecked) {
                 val toRemove = selectedApps.filter { AppIdentifier.isShortcut(it) }
                 selectedApps.removeAll(toRemove.toSet())
+                updateCountBadge()
             }
             reloadAppList(invalidateCache = true)
             LauncherBroadcast.refreshHome(this)

@@ -1,7 +1,11 @@
 <resources>
     <string name="app_name">TV Launcher</string>
-    <string name="select_apps">Select Apps to Add</string>
+    <string name="select_apps">Select Apps</string>
     <string name="select_apps_max">Select apps (max %1$d)</string>
+    <string name="selected_badge">%1$d / %2$d</string>
+    <string name="filter_all">All</string>
+    <string name="filter_selected">Selected</string>
+    <string name="filter_shortcuts">Shortcuts</string>
     <string name="search_hint">Search apps…</string>
     <string name="done">Done</string>
     <string name="settings">Settings</string>
@@ -46,4 +50,29 @@
     <string name="suppress_stock_ram">Kill Stock Launcher Background RAM</string>
     <string name="suppress_stock_ram_desc">Frees 100MB+ RAM by stopping heavy OEM TV home screens</string>
     <string name="accessibility_service_description">Allows TV Launcher to detect the Home button on TV remotes and return to this launcher.</string>
+
+    <!-- Wallpaper Strings -->
+    <string name="wallpaper_settings">Wallpaper Settings</string>
+    <string name="wallpaper_mode">Wallpaper Source</string>
+    <string name="wallpaper_mode_solid">Dark Minimal (No Wallpaper)</string>
+    <string name="wallpaper_mode_reddit">Cycling Reddit Wallpaper</string>
+    <string name="wallpaper_mode_custom">Custom URL Image</string>
+    <string name="wallpaper_category">Category</string>
+    <string name="wallpaper_category_general">General Wallpapers (r/wallpaper)</string>
+    <string name="wallpaper_category_nature">Nature &amp; Wildlife (r/earthporn)</string>
+    <string name="wallpaper_category_cars">Cars &amp; Automotive (r/carporn)</string>
+    <string name="wallpaper_category_anime">Anime &amp; Artwork (r/animewallpaper)</string>
+    <string name="wallpaper_category_space">Space &amp; Astronomy (r/spaceporn)</string>
+    <string name="wallpaper_category_architecture">Architecture (r/cityporn)</string>
+    <string name="wallpaper_interval">Cycle Interval</string>
+    <string name="wallpaper_interval_15m">Every 15 minutes</string>
+    <string name="wallpaper_interval_1h">Every 1 hour</string>
+    <string name="wallpaper_interval_6h">Every 6 hours</string>
+    <string name="wallpaper_interval_24h">Daily (24 hours)</string>
+    <string name="wallpaper_custom_url_hint">Enter direct image URL (https://…)</string>
+    <string name="wallpaper_dim_overlay">Dim Background for Readability</string>
+    <string name="wallpaper_refresh_now">Refresh Wallpaper Now</string>
+    <string name="wallpaper_updating">Fetching new wallpaper…</string>
+    <string name="wallpaper_updated">Wallpaper updated.</string>
+    <string name="wallpaper_failed">Could not load wallpaper image.</string>
 </resources>

@@ -7,6 +7,30 @@
     android:background="@color/bg_main"
     tools:context=".MainActivity">
 
+    <!-- Wallpaper Background Image View -->
+    <ImageView
+        android:id="@+id/wallpaperImageView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:scaleType="centerCrop"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Dimming Overlay (Improves TV readability over bright wallpapers) -->
+    <View
+        android:id="@+id/wallpaperDimOverlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#80000000"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <!-- Clock and Date -->
     <LinearLayout
         android:id="@+id/clockContainer"
@@ -22,11 +46,11 @@
             android:id="@+id/clockText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
             android:format12Hour="h:mm a"
             android:format24Hour="HH:mm"
             android:textColor="@color/text_primary"
-            android:textSize="26sp"
-            android:fontFamily="sans-serif-medium" />
+            android:textSize="26sp" />
 
         <TextClock
             android:id="@+id/dateText"
@@ -39,27 +63,38 @@
             android:textSize="13sp" />
     </LinearLayout>
 
-    <!-- Top Action Buttons -->
+    <!-- Top Action Buttons (Wallpaper + Settings) -->
     <LinearLayout
         android:id="@+id/topActions"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="28dp"
         android:layout_marginEnd="36dp"
-        android:orientation="horizontal"
         android:gravity="center_vertical"
+        android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:id="@+id/wallpaperButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/header_button_background"
+            android:clickable="true"
+            android:contentDescription="@string/wallpaper_settings"
+            android:focusable="true"
+            android:src="@drawable/ic_wallpaper" />
 
         <ImageButton
             android:id="@+id/settingsButton"
             android:layout_width="44dp"
             android:layout_height="44dp"
             android:background="@drawable/header_button_background"
-            android:src="@drawable/ic_settings"
+            android:clickable="true"
             android:contentDescription="@string/settings"
             android:focusable="true"
-            android:clickable="true" />
+            android:src="@drawable/ic_settings" />
     </LinearLayout>
 
     <!-- Grid of App Slots -->
@@ -67,12 +102,12 @@
         android:id="@+id/appSlots"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="24dp"
         android:layout_marginStart="24dp"
+        android:layout_marginTop="24dp"
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="24dp"
-        android:padding="8dp"
         android:clipToPadding="false"
+        android:padding="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -102,8 +137,8 @@
             android:layout_width="16dp"
             android:layout_height="16dp"
             android:layout_marginEnd="6dp"
-            android:src="@drawable/ic_info"
-            android:contentDescription="@null" />
+            android:contentDescription="@null"
+            android:src="@drawable/ic_info" />
 
         <TextView
             android:layout_width="wrap_content"

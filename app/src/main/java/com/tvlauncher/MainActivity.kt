@@ -2,13 +2,22 @@ package com.tvlauncher
 
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.KeyEvent
 import android.view.LayoutInflater
+import android.view.View
+import android.widget.ArrayAdapter
+import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.RadioButton
+import android.widget.RadioGroup
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -22,7 +31,10 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var appSlots: RecyclerView
     private lateinit var settingsButton: ImageButton
-    private lateinit var aboutButton: android.view.View
+    private lateinit var wallpaperButton: ImageButton
+    private lateinit var aboutButton: View
+    private lateinit var wallpaperImageView: ImageView
+    private lateinit var wallpaperDimOverlay: View
     private lateinit var appManager: AppManager
     private lateinit var appSlotAdapter: AppSlotAdapter
     private var lastFocusedPosition: Int = 0
@@ -48,12 +60,16 @@ class MainActivity : AppCompatActivity() {
 
         appSlots = findViewById(R.id.appSlots)
         settingsButton = findViewById(R.id.settingsButton)
+        wallpaperButton = findViewById(R.id.wallpaperButton)
         aboutButton = findViewById(R.id.aboutButton)
+        wallpaperImageView = findViewById(R.id.wallpaperImageView)
+        wallpaperDimOverlay = findViewById(R.id.wallpaperDimOverlay)
 
         appManager = AppManager(this)
         setupRecyclerView()
         setupClickListeners()
         loadAppSlots()
+        applyWallpaper()
 
         ContextCompat.registerReceiver(
             this,
@@ -65,7 +81,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            // TV Home Launcher ignores back or moves focus to first slot
             if (appSlots.childCount > 0) {
                 appSlots.getChildAt(0).requestFocus()
             }
@@ -99,7 +114,136 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupClickListeners() {
         settingsButton.setOnClickListener { openAndroidSettings() }
+        wallpaperButton.setOnClickListener { showWallpaperDialog() }
         aboutButton.setOnClickListener { showAboutDialog() }
+    }
+
+    private fun applyWallpaper(force: Boolean = false) {
+        val mode = WallpaperManager.getWallpaperMode(this)
+        val dimEnabled = WallpaperManager.isDimOverlayEnabled(this)
+
+        if (mode == WallpaperManager.MODE_SOLID) {
+            wallpaperImageView.visibility = View.GONE
+            wallpaperDimOverlay.visibility = View.GONE
+            return
+        }
+
+        val displayMetrics = resources.displayMetrics
+        val width = displayMetrics.widthPixels
+        val height = displayMetrics.heightPixels
+
+        WallpaperManager.refreshWallpaperIfNeeded(this, width, height, force) { success, drawable ->
+            if (success && drawable != null) {
+                wallpaperImageView.setImageDrawable(drawable)
+                wallpaperImageView.visibility = View.VISIBLE
+                wallpaperDimOverlay.visibility = if (dimEnabled) View.VISIBLE else View.GONE
+            } else if (mode == WallpaperManager.MODE_SOLID) {
+                wallpaperImageView.visibility = View.GONE
+                wallpaperDimOverlay.visibility = View.GONE
+            }
+        }
+    }
+
+    private fun showWallpaperDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_wallpaper_settings, null)
+        val radioGroup = dialogView.findViewById<RadioGroup>(R.id.wallpaperModeGroup)
+        val radioSolid = dialogView.findViewById<RadioButton>(R.id.radioModeSolid)
+        val radioReddit = dialogView.findViewById<RadioButton>(R.id.radioModeReddit)
+        val radioCustom = dialogView.findViewById<RadioButton>(R.id.radioModeCustom)
+
+        val redditContainer = dialogView.findViewById<LinearLayout>(R.id.redditOptionsContainer)
+        val categorySpinner = dialogView.findViewById<Spinner>(R.id.categorySpinner)
+        val intervalSpinner = dialogView.findViewById<Spinner>(R.id.intervalSpinner)
+
+        val customUrlContainer = dialogView.findViewById<LinearLayout>(R.id.customUrlContainer)
+        val customUrlEdit = dialogView.findViewById<EditText>(R.id.customUrlEdit)
+        val dimSwitch = dialogView.findViewById<SwitchCompat>(R.id.dimOverlaySwitch)
+
+        // Categories setup
+        val categories = listOf(
+            WallpaperManager.CATEGORY_GENERAL to getString(R.string.wallpaper_category_general),
+            WallpaperManager.CATEGORY_NATURE to getString(R.string.wallpaper_category_nature),
+            WallpaperManager.CATEGORY_CARS to getString(R.string.wallpaper_category_cars),
+            WallpaperManager.CATEGORY_ANIME to getString(R.string.wallpaper_category_anime),
+            WallpaperManager.CATEGORY_SPACE to getString(R.string.wallpaper_category_space),
+            WallpaperManager.CATEGORY_ARCHITECTURE to getString(R.string.wallpaper_category_architecture)
+        )
+        val categoryAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, categories.map { it.second })
+        categorySpinner.adapter = categoryAdapter
+        val currentCategory = WallpaperManager.getCategory(this)
+        val categoryIndex = categories.indexOfFirst { it.first == currentCategory }.coerceAtLeast(0)
+        categorySpinner.setSelection(categoryIndex)
+
+        // Intervals setup
+        val intervals = listOf(
+            WallpaperManager.INTERVAL_15M to getString(R.string.wallpaper_interval_15m),
+            WallpaperManager.INTERVAL_1H to getString(R.string.wallpaper_interval_1h),
+            WallpaperManager.INTERVAL_6H to getString(R.string.wallpaper_interval_6h),
+            WallpaperManager.INTERVAL_24H to getString(R.string.wallpaper_interval_24h)
+        )
+        val intervalAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, intervals.map { it.second })
+        intervalSpinner.adapter = intervalAdapter
+        val currentInterval = WallpaperManager.getInterval(this)
+        val intervalIndex = intervals.indexOfFirst { it.first == currentInterval }.coerceAtLeast(0)
+        intervalSpinner.setSelection(intervalIndex)
+
+        customUrlEdit.setText(WallpaperManager.getCustomUrl(this))
+        dimSwitch.isChecked = WallpaperManager.isDimOverlayEnabled(this)
+
+        fun updateVisibility(mode: String) {
+            redditContainer.visibility = if (mode == WallpaperManager.MODE_REDDIT) View.VISIBLE else View.GONE
+            customUrlContainer.visibility = if (mode == WallpaperManager.MODE_CUSTOM) View.VISIBLE else View.GONE
+        }
+
+        val initialMode = WallpaperManager.getWallpaperMode(this)
+        when (initialMode) {
+            WallpaperManager.MODE_SOLID -> radioSolid.isChecked = true
+            WallpaperManager.MODE_REDDIT -> radioReddit.isChecked = true
+            WallpaperManager.MODE_CUSTOM -> radioCustom.isChecked = true
+        }
+        updateVisibility(initialMode)
+
+        radioGroup.setOnCheckedChangeListener { _, checkedId ->
+            val mode = when (checkedId) {
+                R.id.radioModeReddit -> WallpaperManager.MODE_REDDIT
+                R.id.radioModeCustom -> WallpaperManager.MODE_CUSTOM
+                else -> WallpaperManager.MODE_SOLID
+            }
+            updateVisibility(mode)
+        }
+
+        AlertDialog.Builder(this, R.style.Theme_TVLauncher_AboutDialog)
+            .setTitle(R.string.wallpaper_settings)
+            .setView(dialogView)
+            .setPositiveButton(R.string.done) { _, _ ->
+                val selectedMode = when (radioGroup.checkedRadioButtonId) {
+                    R.id.radioModeReddit -> WallpaperManager.MODE_REDDIT
+                    R.id.radioModeCustom -> WallpaperManager.MODE_CUSTOM
+                    else -> WallpaperManager.MODE_SOLID
+                }
+                WallpaperManager.setWallpaperMode(this, selectedMode)
+                WallpaperManager.setCategory(this, categories[categorySpinner.selectedItemPosition].first)
+                WallpaperManager.setInterval(this, intervals[intervalSpinner.selectedItemPosition].first)
+                WallpaperManager.setCustomUrl(this, customUrlEdit.text.toString().trim())
+                WallpaperManager.setDimOverlayEnabled(this, dimSwitch.isChecked)
+                applyWallpaper(force = true)
+            }
+            .setNeutralButton(R.string.wallpaper_refresh_now) { _, _ ->
+                Toast.makeText(this, R.string.wallpaper_updating, Toast.LENGTH_SHORT).show()
+                val selectedMode = when (radioGroup.checkedRadioButtonId) {
+                    R.id.radioModeReddit -> WallpaperManager.MODE_REDDIT
+                    R.id.radioModeCustom -> WallpaperManager.MODE_CUSTOM
+                    else -> WallpaperManager.MODE_SOLID
+                }
+                WallpaperManager.setWallpaperMode(this, selectedMode)
+                WallpaperManager.setCategory(this, categories[categorySpinner.selectedItemPosition].first)
+                WallpaperManager.setInterval(this, intervals[intervalSpinner.selectedItemPosition].first)
+                WallpaperManager.setCustomUrl(this, customUrlEdit.text.toString().trim())
+                WallpaperManager.setDimOverlayEnabled(this, dimSwitch.isChecked)
+                applyWallpaper(force = true)
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
     }
 
     private fun showAppContextMenu(position: Int) {
@@ -376,6 +520,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         loadAppSlots()
+        applyWallpaper(force = false)
         RamOptimizationHelper.suppressStockLauncherRam(applicationContext)
     }
 
