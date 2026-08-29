@@ -16,8 +16,7 @@ import java.util.concurrent.Executors
 
 /**
  * High-performance, zero-dependency Wallpaper Manager with downsampling for low-RAM devices.
- * Supports Reddit category cycling (r/wallpaper, r/earthporn, r/carporn, r/animewallpaper, etc.)
- * and direct custom image URLs with offline disk caching.
+ * Fetches HD wallpapers via Wallhaven / Reddit public endpoints with offline disk caching.
  */
 object WallpaperManager {
 
@@ -26,11 +25,11 @@ object WallpaperManager {
     const val MODE_CUSTOM = "custom"
 
     const val CATEGORY_GENERAL = "wallpaper"
-    const val CATEGORY_NATURE = "earthporn"
-    const val CATEGORY_CARS = "carporn"
-    const val CATEGORY_ANIME = "animewallpaper"
-    const val CATEGORY_SPACE = "spaceporn"
-    const val CATEGORY_ARCHITECTURE = "cityporn"
+    const val CATEGORY_NATURE = "nature"
+    const val CATEGORY_CARS = "cars"
+    const val CATEGORY_ANIME = "anime"
+    const val CATEGORY_SPACE = "space"
+    const val CATEGORY_ARCHITECTURE = "city"
 
     const val INTERVAL_15M = 15 * 60 * 1000L
     const val INTERVAL_1H = 60 * 60 * 1000L
@@ -134,7 +133,7 @@ object WallpaperManager {
 
         executor.execute {
             val imageUrl = when (mode) {
-                MODE_REDDIT -> fetchRedditImageUrl(getCategory(context))
+                MODE_REDDIT -> fetchOnlineWallpaperUrl(getCategory(context))
                 MODE_CUSTOM -> getCustomUrl(context)
                 else -> null
             }
@@ -155,14 +154,58 @@ object WallpaperManager {
         }
     }
 
-    private fun fetchRedditImageUrl(subreddit: String): String? {
+    private fun fetchOnlineWallpaperUrl(category: String): String? {
+        return fetchFromWallhaven(category) ?: fetchFromRedditFallback(category)
+    }
+
+    private fun fetchFromWallhaven(category: String): String? {
         return try {
-            val endpoint = "https://www.reddit.com/r/$subreddit/hot.json?limit=25"
+            val query = when (category) {
+                CATEGORY_NATURE, "earthporn" -> "nature"
+                CATEGORY_CARS, "carporn" -> "cars"
+                CATEGORY_ANIME, "animewallpaper" -> "anime"
+                CATEGORY_SPACE, "spaceporn" -> "space"
+                CATEGORY_ARCHITECTURE, "cityporn" -> "city"
+                else -> "wallpaper"
+            }
+            val endpoint = "https://wallhaven.cc/api/v1/search?q=$query&sorting=random&ratios=16x9,16x10&purity=100"
             val url = URL(endpoint)
             val conn = (url.openConnection() as HttpURLConnection).apply {
                 connectTimeout = 8000
                 readTimeout = 8000
-                setRequestProperty("User-Agent", "android:com.tvlauncher:v1.6.0 (by /u/tvlauncher)")
+                setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+            }
+
+            if (conn.responseCode != 200) return null
+            val responseText = conn.inputStream.bufferedReader().use { it.readText() }
+            val json = JSONObject(responseText)
+            val dataArray = json.getJSONArray("data")
+            if (dataArray.length() == 0) return null
+
+            val randomIndex = (0 until dataArray.length()).random()
+            val item = dataArray.getJSONObject(randomIndex)
+            item.optString("path", null)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun fetchFromRedditFallback(category: String): String? {
+        return try {
+            val sub = when (category) {
+                CATEGORY_NATURE, "nature" -> "earthporn"
+                CATEGORY_CARS, "cars" -> "carporn"
+                CATEGORY_ANIME, "anime" -> "animewallpaper"
+                CATEGORY_SPACE, "space" -> "spaceporn"
+                CATEGORY_ARCHITECTURE, "city" -> "cityporn"
+                else -> "wallpaper"
+            }
+            val endpoint = "https://www.reddit.com/r/$sub/top.json?t=month&limit=25"
+            val url = URL(endpoint)
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                connectTimeout = 6000
+                readTimeout = 6000
+                setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android TV) AppleWebKit/537.36")
             }
 
             if (conn.responseCode != 200) return null
@@ -186,28 +229,47 @@ object WallpaperManager {
     }
 
     private fun downloadAndCacheImage(context: Context, imageUrl: String): Boolean {
-        return try {
-            val url = URL(imageUrl)
-            val conn = (url.openConnection() as HttpURLConnection).apply {
-                connectTimeout = 10000
-                readTimeout = 10000
-            }
-            if (conn.responseCode !in 200..299) return false
-
-            val tempFile = File(context.cacheDir, "${CACHE_FILE_NAME}.tmp")
-            conn.inputStream.use { input ->
-                FileOutputStream(tempFile).use { output ->
-                    input.copyTo(output)
+        var currentUrl = imageUrl
+        var redirects = 0
+        while (redirects < 5) {
+            try {
+                val url = URL(currentUrl)
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 12000
+                    readTimeout = 12000
+                    instanceFollowRedirects = true
+                    setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
                 }
-            }
 
-            val destFile = File(context.cacheDir, CACHE_FILE_NAME)
-            if (destFile.exists()) destFile.delete()
-            tempFile.renameTo(destFile)
-            true
-        } catch (_: Exception) {
-            false
+                val status = conn.responseCode
+                if (status == HttpURLConnection.HTTP_MOVED_TEMP ||
+                    status == HttpURLConnection.HTTP_MOVED_PERM ||
+                    status == HttpURLConnection.HTTP_SEE_OTHER
+                ) {
+                    val location = conn.getHeaderField("Location") ?: return false
+                    currentUrl = location
+                    redirects++
+                    continue
+                }
+
+                if (status !in 200..299) return false
+
+                val tempFile = File(context.cacheDir, "${CACHE_FILE_NAME}.tmp")
+                conn.inputStream.use { input ->
+                    FileOutputStream(tempFile).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+
+                val destFile = File(context.cacheDir, CACHE_FILE_NAME)
+                if (destFile.exists()) destFile.delete()
+                tempFile.renameTo(destFile)
+                return true
+            } catch (_: Exception) {
+                return false
+            }
         }
+        return false
     }
 
     private fun decodeSampledBitmapFromFile(path: String, reqWidth: Int, reqHeight: Int): Bitmap? {

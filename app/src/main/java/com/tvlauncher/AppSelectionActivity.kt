@@ -24,7 +24,7 @@ class AppSelectionActivity : AppCompatActivity() {
     private enum class FilterTab { ALL, SELECTED, SHORTCUTS }
 
     private lateinit var appList: RecyclerView
-    private lateinit var doneButton: Button
+    private lateinit var doneButton: TextView
     private lateinit var loadingProgress: ProgressBar
     private lateinit var searchEdit: EditText
     private lateinit var selectedCountBadge: TextView

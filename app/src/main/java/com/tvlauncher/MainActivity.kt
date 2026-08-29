@@ -10,14 +10,12 @@ import android.provider.Settings
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
-import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -152,8 +150,8 @@ class MainActivity : AppCompatActivity() {
         val radioCustom = dialogView.findViewById<RadioButton>(R.id.radioModeCustom)
 
         val redditContainer = dialogView.findViewById<LinearLayout>(R.id.redditOptionsContainer)
-        val categorySpinner = dialogView.findViewById<Spinner>(R.id.categorySpinner)
-        val intervalSpinner = dialogView.findViewById<Spinner>(R.id.intervalSpinner)
+        val categoryButton = dialogView.findViewById<TextView>(R.id.categorySelectorButton)
+        val intervalButton = dialogView.findViewById<TextView>(R.id.intervalSelectorButton)
 
         val customUrlContainer = dialogView.findViewById<LinearLayout>(R.id.customUrlContainer)
         val customUrlEdit = dialogView.findViewById<EditText>(R.id.customUrlEdit)
@@ -168,11 +166,23 @@ class MainActivity : AppCompatActivity() {
             WallpaperManager.CATEGORY_SPACE to getString(R.string.wallpaper_category_space),
             WallpaperManager.CATEGORY_ARCHITECTURE to getString(R.string.wallpaper_category_architecture)
         )
-        val categoryAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, categories.map { it.second })
-        categorySpinner.adapter = categoryAdapter
-        val currentCategory = WallpaperManager.getCategory(this)
-        val categoryIndex = categories.indexOfFirst { it.first == currentCategory }.coerceAtLeast(0)
-        categorySpinner.setSelection(categoryIndex)
+        val initialCategoryKey = WallpaperManager.getCategory(this)
+        var selectedCategoryIndex = categories.indexOfFirst { it.first == initialCategoryKey }.coerceAtLeast(0)
+        categoryButton.text = categories[selectedCategoryIndex].second
+        categoryButton.setOnClickListener {
+            AlertDialog.Builder(this, R.style.Theme_TVLauncher_AboutDialog)
+                .setTitle(R.string.wallpaper_category)
+                .setSingleChoiceItems(
+                    categories.map { it.second }.toTypedArray(),
+                    selectedCategoryIndex
+                ) { dialog, which ->
+                    selectedCategoryIndex = which
+                    categoryButton.text = categories[which].second
+                    dialog.dismiss()
+                }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
+        }
 
         // Intervals setup
         val intervals = listOf(
@@ -181,11 +191,23 @@ class MainActivity : AppCompatActivity() {
             WallpaperManager.INTERVAL_6H to getString(R.string.wallpaper_interval_6h),
             WallpaperManager.INTERVAL_24H to getString(R.string.wallpaper_interval_24h)
         )
-        val intervalAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, intervals.map { it.second })
-        intervalSpinner.adapter = intervalAdapter
-        val currentInterval = WallpaperManager.getInterval(this)
-        val intervalIndex = intervals.indexOfFirst { it.first == currentInterval }.coerceAtLeast(0)
-        intervalSpinner.setSelection(intervalIndex)
+        val initialIntervalValue = WallpaperManager.getInterval(this)
+        var selectedIntervalIndex = intervals.indexOfFirst { it.first == initialIntervalValue }.coerceAtLeast(0)
+        intervalButton.text = intervals[selectedIntervalIndex].second
+        intervalButton.setOnClickListener {
+            AlertDialog.Builder(this, R.style.Theme_TVLauncher_AboutDialog)
+                .setTitle(R.string.wallpaper_interval)
+                .setSingleChoiceItems(
+                    intervals.map { it.second }.toTypedArray(),
+                    selectedIntervalIndex
+                ) { dialog, which ->
+                    selectedIntervalIndex = which
+                    intervalButton.text = intervals[which].second
+                    dialog.dismiss()
+                }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
+        }
 
         customUrlEdit.setText(WallpaperManager.getCustomUrl(this))
         dimSwitch.isChecked = WallpaperManager.isDimOverlayEnabled(this)
@@ -212,34 +234,30 @@ class MainActivity : AppCompatActivity() {
             updateVisibility(mode)
         }
 
+        fun saveWallpaperSettings(): String {
+            val selectedMode = when (radioGroup.checkedRadioButtonId) {
+                R.id.radioModeReddit -> WallpaperManager.MODE_REDDIT
+                R.id.radioModeCustom -> WallpaperManager.MODE_CUSTOM
+                else -> WallpaperManager.MODE_SOLID
+            }
+            WallpaperManager.setWallpaperMode(this, selectedMode)
+            WallpaperManager.setCategory(this, categories[selectedCategoryIndex].first)
+            WallpaperManager.setInterval(this, intervals[selectedIntervalIndex].first)
+            WallpaperManager.setCustomUrl(this, customUrlEdit.text.toString().trim())
+            WallpaperManager.setDimOverlayEnabled(this, dimSwitch.isChecked)
+            return selectedMode
+        }
+
         AlertDialog.Builder(this, R.style.Theme_TVLauncher_AboutDialog)
             .setTitle(R.string.wallpaper_settings)
             .setView(dialogView)
             .setPositiveButton(R.string.done) { _, _ ->
-                val selectedMode = when (radioGroup.checkedRadioButtonId) {
-                    R.id.radioModeReddit -> WallpaperManager.MODE_REDDIT
-                    R.id.radioModeCustom -> WallpaperManager.MODE_CUSTOM
-                    else -> WallpaperManager.MODE_SOLID
-                }
-                WallpaperManager.setWallpaperMode(this, selectedMode)
-                WallpaperManager.setCategory(this, categories[categorySpinner.selectedItemPosition].first)
-                WallpaperManager.setInterval(this, intervals[intervalSpinner.selectedItemPosition].first)
-                WallpaperManager.setCustomUrl(this, customUrlEdit.text.toString().trim())
-                WallpaperManager.setDimOverlayEnabled(this, dimSwitch.isChecked)
+                saveWallpaperSettings()
                 applyWallpaper(force = true)
             }
             .setNeutralButton(R.string.wallpaper_refresh_now) { _, _ ->
                 Toast.makeText(this, R.string.wallpaper_updating, Toast.LENGTH_SHORT).show()
-                val selectedMode = when (radioGroup.checkedRadioButtonId) {
-                    R.id.radioModeReddit -> WallpaperManager.MODE_REDDIT
-                    R.id.radioModeCustom -> WallpaperManager.MODE_CUSTOM
-                    else -> WallpaperManager.MODE_SOLID
-                }
-                WallpaperManager.setWallpaperMode(this, selectedMode)
-                WallpaperManager.setCategory(this, categories[categorySpinner.selectedItemPosition].first)
-                WallpaperManager.setInterval(this, intervals[intervalSpinner.selectedItemPosition].first)
-                WallpaperManager.setCustomUrl(this, customUrlEdit.text.toString().trim())
-                WallpaperManager.setDimOverlayEnabled(this, dimSwitch.isChecked)
+                saveWallpaperSettings()
                 applyWallpaper(force = true)
             }
             .setNegativeButton(R.string.cancel, null)
