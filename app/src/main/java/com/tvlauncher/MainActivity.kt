@@ -351,15 +351,20 @@ class MainActivity : AppCompatActivity() {
 
     private fun showAboutDialog() {
         val versionName = getVersionName()
-        val message = getString(R.string.about_message, versionName, getString(R.string.github_repo_url))
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_about, null)
-        dialogView.findViewById<TextView>(R.id.aboutMessageText).text = message
 
-        // 1. Home button override switch
+        val versionText = dialogView.findViewById<TextView>(R.id.aboutVersionText)
+        versionText.text = "v$versionName (FOSS)"
+
+        val cardHomeOverride = dialogView.findViewById<LinearLayout>(R.id.cardHomeOverride)
         val homeOverrideSwitch = dialogView.findViewById<SwitchCompat>(R.id.homeOverrideSwitch)
         val isOverrideConfigured = TvHomeOverrideService.isHomeOverrideEnabled(this)
         val isServiceActive = TvHomeOverrideService.isAccessibilityServiceEnabled(this)
         homeOverrideSwitch.isChecked = isOverrideConfigured && isServiceActive
+
+        cardHomeOverride.setOnClickListener {
+            homeOverrideSwitch.toggle()
+        }
 
         homeOverrideSwitch.setOnCheckedChangeListener { _, isChecked ->
             TvHomeOverrideService.setHomeOverrideEnabled(this, isChecked)
@@ -372,8 +377,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         // 2. Stock Launcher RAM killer switch
+        val cardSuppressRam = dialogView.findViewById<LinearLayout>(R.id.cardSuppressRam)
         val suppressRamSwitch = dialogView.findViewById<SwitchCompat>(R.id.suppressStockRamSwitch)
         suppressRamSwitch.isChecked = TvHomeOverrideService.isSuppressStockLauncherEnabled(this)
+
+        cardSuppressRam.setOnClickListener {
+            suppressRamSwitch.toggle()
+        }
+
         suppressRamSwitch.setOnCheckedChangeListener { _, isChecked ->
             TvHomeOverrideService.setSuppressStockLauncherEnabled(this, isChecked)
             if (isChecked) {
@@ -382,8 +393,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         // 3. Auto update switch
+        val cardAutoUpdate = dialogView.findViewById<LinearLayout>(R.id.cardAutoUpdate)
         val autoUpdateSwitch = dialogView.findViewById<SwitchCompat>(R.id.autoUpdateSwitch)
         autoUpdateSwitch.isChecked = AppUpdateManager.isAutoUpdateEnabled(this)
+
+        cardAutoUpdate.setOnClickListener {
+            autoUpdateSwitch.toggle()
+        }
+
         autoUpdateSwitch.setOnCheckedChangeListener { _, isChecked ->
             AppUpdateManager.setAutoUpdateEnabled(this, isChecked)
             val hint = if (isChecked) R.string.update_auto_on else R.string.update_auto_off

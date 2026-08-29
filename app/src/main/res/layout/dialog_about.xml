@@ -14,23 +14,58 @@
         android:paddingEnd="24dp"
         android:paddingBottom="20dp">
 
-        <!-- App Info Card -->
+        <!-- App Brand Header Card -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/header_button_background"
-            android:orientation="vertical"
-            android:padding="14dp">
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="16dp">
 
-            <TextView
-                android:id="@+id/aboutMessageText"
-                android:layout_width="match_parent"
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:contentDescription="@string/app_name"
+                android:src="@mipmap/ic_launcher" />
+
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:lineSpacingMultiplier="1.25"
-                android:textColor="@color/text_primary"
-                android:textSize="13sp" />
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/aboutAppTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="@string/app_name"
+                    android:textColor="@color/text_primary"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/aboutVersionText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="@color/accent"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Fast, lightweight, minimal RAM launcher"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp" />
+            </LinearLayout>
         </LinearLayout>
 
+        <!-- System & Launcher Options Section -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -40,20 +75,24 @@
             android:textSize="12sp"
             android:textStyle="bold" />
 
-        <!-- Setting 1: Override Default TV Launcher -->
+        <!-- Option 1: Override TV Home Button -->
         <LinearLayout
+            android:id="@+id/cardHomeOverride"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:background="@drawable/header_button_background"
+            android:clickable="true"
+            android:focusable="true"
             android:orientation="vertical"
-            android:padding="12dp">
+            android:padding="14dp">
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/homeOverrideSwitch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:focusable="true"
+                android:clickable="false"
+                android:focusable="false"
                 android:text="@string/override_default_launcher"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp"
@@ -70,20 +109,24 @@
                 android:textSize="12sp" />
         </LinearLayout>
 
-        <!-- Setting 2: Suppress Stock Launcher RAM -->
+        <!-- Option 2: Stock Launcher RAM Killer -->
         <LinearLayout
+            android:id="@+id/cardSuppressRam"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:background="@drawable/header_button_background"
+            android:clickable="true"
+            android:focusable="true"
             android:orientation="vertical"
-            android:padding="12dp">
+            android:padding="14dp">
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/suppressStockRamSwitch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:focusable="true"
+                android:clickable="false"
+                android:focusable="false"
                 android:text="@string/suppress_stock_ram"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp"
@@ -100,20 +143,24 @@
                 android:textSize="12sp" />
         </LinearLayout>
 
-        <!-- Setting 3: Weekly updates -->
+        <!-- Option 3: Weekly Auto-Updates -->
         <LinearLayout
+            android:id="@+id/cardAutoUpdate"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:background="@drawable/header_button_background"
+            android:clickable="true"
+            android:focusable="true"
             android:orientation="vertical"
-            android:padding="12dp">
+            android:padding="14dp">
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/autoUpdateSwitch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:focusable="true"
+                android:clickable="false"
+                android:focusable="false"
                 android:text="@string/update_auto_toggle"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp"
@@ -125,7 +172,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Automatically check and install new TV Launcher updates"
+                android:text="Automatically check and install new TV Launcher updates in background"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp" />
         </LinearLayout>
