@@ -32,11 +32,15 @@ object RamOptimizationHelper {
             val targets = mutableSetOf<String>()
             homeResolvers.forEach { resolveInfo ->
                 val pkg = resolveInfo.activityInfo.packageName
-                if (pkg != context.packageName) {
+                if (pkg != context.packageName && !TvHomeOverrideService.isWhitelistedPackage(pkg)) {
                     targets.add(pkg)
                 }
             }
-            targets.addAll(KNOWN_STOCK_LAUNCHERS)
+            KNOWN_STOCK_LAUNCHERS.forEach { pkg ->
+                if (!TvHomeOverrideService.isWhitelistedPackage(pkg)) {
+                    targets.add(pkg)
+                }
+            }
 
             targets.forEach { packageName ->
                 try {

@@ -286,6 +286,7 @@ object AppUpdateManager {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             return
         }
+        TvHomeOverrideService.pauseOverrideFor(5000)
         try {
             val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
                 data = Uri.parse("package:${context.packageName}")

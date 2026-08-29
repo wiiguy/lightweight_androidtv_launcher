@@ -339,6 +339,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openAppDetails(packageName: String) {
+        TvHomeOverrideService.pauseOverrideFor(3000)
         try {
             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                 data = Uri.fromParts("package", packageName, null)
@@ -421,6 +422,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openAccessibilitySettings() {
+        TvHomeOverrideService.pauseOverrideFor(5000)
         val intents = listOf(
             Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS),
             Intent("android.settings.ACCESSIBILITY_SETTINGS"),
@@ -499,6 +501,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openAndroidSettings() {
+        TvHomeOverrideService.pauseOverrideFor(5000)
         try {
             startActivity(Intent(Settings.ACTION_SETTINGS))
         } catch (_: Exception) {

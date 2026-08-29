@@ -51,7 +51,7 @@ class TvHomeOverrideService : AccessibilityService() {
             val homeResolvers = pm.queryIntentActivities(homeIntent, PackageManager.MATCH_ALL)
             homeResolvers.forEach { resolveInfo ->
                 val pkg = resolveInfo.activityInfo.packageName
-                if (pkg != packageName) {
+                if (pkg != packageName && !isWhitelistedPackage(pkg)) {
                     knownStockLauncherPackages.add(pkg)
                 }
             }
@@ -85,11 +85,26 @@ class TvHomeOverrideService : AccessibilityService() {
 
         if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             val pkgName = event.packageName?.toString() ?: return
+
+            // If user or system recently requested settings/system activity, pause window hijack
+            if (System.currentTimeMillis() < pauseOverrideUntil) return
+
+            // Whitelist check
+            if (isWhitelistedPackage(pkgName)) return
+
+            // Check if class name is an Android system settings dialog/activity
+            val className = event.className?.toString()?.lowercase() ?: ""
+            if (className.contains("setting") || className.contains("preference") || className.contains("dialog")) {
+                return
+            }
+
             if (pkgName != packageName && knownStockLauncherPackages.contains(pkgName)) {
-                // Stock OEM Launcher intercepted on screen! Immediately pull our launcher to front.
+                // Stock OEM Launcher intercepted on screen! Pull our launcher to front.
                 mainHandler.removeCallbacksAndMessages(null)
                 mainHandler.postDelayed({
-                    launchHome()
+                    if (System.currentTimeMillis() >= pauseOverrideUntil) {
+                        launchHome()
+                    }
                 }, 30)
             }
         }
@@ -121,6 +136,34 @@ class TvHomeOverrideService : AccessibilityService() {
         private const val PREFS_NAME = "launcher_settings"
         private const val PREF_HOME_OVERRIDE = "home_override_enabled"
         private const val PREF_SUPPRESS_STOCK = "suppress_stock_launcher"
+
+        @Volatile
+        private var pauseOverrideUntil: Long = 0L
+
+        private val SYSTEM_WHITELIST_PACKAGES = setOf(
+            "com.android.settings",
+            "com.android.tv.settings",
+            "com.google.android.tv.settings",
+            "com.amazon.tv.settings",
+            "com.amazon.device.settings",
+            "com.tcl.settings",
+            "com.xiaomi.mitv.settings",
+            "com.android.packageinstaller",
+            "com.google.android.packageinstaller",
+            "com.android.permissioncontroller",
+            "com.google.android.permissioncontroller",
+            "android"
+        )
+
+        fun pauseOverrideFor(durationMs: Long) {
+            pauseOverrideUntil = System.currentTimeMillis() + durationMs
+        }
+
+        fun isWhitelistedPackage(packageName: String): Boolean {
+            if (SYSTEM_WHITELIST_PACKAGES.contains(packageName)) return true
+            if (packageName.contains(".settings") || packageName.endsWith(".settings")) return true
+            return false
+        }
 
         fun isAccessibilityServiceEnabled(context: Context): Boolean {
             val expectedServiceName = "${context.packageName}/${TvHomeOverrideService::class.java.canonicalName}"

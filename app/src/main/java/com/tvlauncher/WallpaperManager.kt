@@ -215,7 +215,7 @@ object WallpaperManager {
 
             val randomIndex = (0 until dataArray.length()).random()
             val item = dataArray.getJSONObject(randomIndex)
-            item.optString("path", null)
+            if (item.has("path")) item.getString("path") else null
         } catch (_: Exception) {
             null
         }
@@ -248,11 +248,11 @@ object WallpaperManager {
     private fun fetchFromRedditFallback(category: String): String? {
         return try {
             val sub = when (category) {
-                CATEGORY_NATURE, "nature" -> "earthporn"
-                CATEGORY_CARS, "cars" -> "carporn"
-                CATEGORY_ANIME, "anime" -> "animewallpaper"
-                CATEGORY_SPACE, "space" -> "spaceporn"
-                CATEGORY_ARCHITECTURE, "city" -> "cityporn"
+                CATEGORY_NATURE -> "earthporn"
+                CATEGORY_CARS -> "carporn"
+                CATEGORY_ANIME -> "animewallpaper"
+                CATEGORY_SPACE -> "spaceporn"
+                CATEGORY_ARCHITECTURE -> "cityporn"
                 else -> "wallpaper"
             }
             val endpoint = "https://www.reddit.com/r/$sub/top.json?t=month&limit=25"
