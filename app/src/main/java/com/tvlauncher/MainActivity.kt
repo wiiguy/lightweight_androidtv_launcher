@@ -187,14 +187,16 @@ class MainActivity : AppCompatActivity() {
 
         // 1. Home button override switch
         val homeOverrideSwitch = dialogView.findViewById<SwitchCompat>(R.id.homeOverrideSwitch)
-        homeOverrideSwitch.isChecked = TvHomeOverrideService.isHomeOverrideEnabled(this)
+        val isOverrideConfigured = TvHomeOverrideService.isHomeOverrideEnabled(this)
+        val isServiceActive = TvHomeOverrideService.isAccessibilityServiceEnabled(this)
+        homeOverrideSwitch.isChecked = isOverrideConfigured && isServiceActive
+
         homeOverrideSwitch.setOnCheckedChangeListener { _, isChecked ->
             TvHomeOverrideService.setHomeOverrideEnabled(this, isChecked)
             if (isChecked) {
-                Toast.makeText(this, R.string.enable_accessibility_prompt, Toast.LENGTH_LONG).show()
-                try {
-                    startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-                } catch (_: Exception) {
+                if (!TvHomeOverrideService.isAccessibilityServiceEnabled(this)) {
+                    Toast.makeText(this, R.string.enable_accessibility_prompt, Toast.LENGTH_LONG).show()
+                    openAccessibilitySettings()
                 }
             }
         }
@@ -229,6 +231,21 @@ class MainActivity : AppCompatActivity() {
             }
             .setNegativeButton(R.string.about_close, null)
             .show()
+    }
+
+    private fun openAccessibilitySettings() {
+        val intents = listOf(
+            Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS),
+            Intent("android.settings.ACCESSIBILITY_SETTINGS"),
+            Intent(Settings.ACTION_SETTINGS)
+        )
+        for (intent in intents) {
+            try {
+                startActivity(intent)
+                return
+            } catch (_: Exception) {
+            }
+        }
     }
 
     private fun checkForUpdatesManually() {
