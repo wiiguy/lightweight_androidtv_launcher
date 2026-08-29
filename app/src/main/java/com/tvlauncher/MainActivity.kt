@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.widget.ImageButton
 import android.widget.TextView
@@ -26,8 +27,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var appSlotAdapter: AppSlotAdapter
     private var lastFocusedPosition: Int = 0
 
-    /** Small bitmaps on home — avoids holding full-resolution launcher icons in RAM. */
-    private val slotIconSizePx: Int by lazy { (60 * resources.displayMetrics.density).toInt() }
+    /** Increased bitmap size for crisp rounded icons. */
+    private val slotIconSizePx: Int by lazy { (72 * resources.displayMetrics.density).toInt() }
 
     private val refreshReceiver = object : android.content.BroadcastReceiver() {
         override fun onReceive(context: android.content.Context?, intent: Intent?) {
@@ -60,6 +61,17 @@ class MainActivity : AppCompatActivity() {
             android.content.IntentFilter(LauncherBroadcast.ACTION_REFRESH_HOME),
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            // TV Home Launcher ignores back or moves focus to first slot
+            if (appSlots.childCount > 0) {
+                appSlots.getChildAt(0).requestFocus()
+            }
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
     }
 
     private fun setupRecyclerView() {
@@ -108,7 +120,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 2. Move Left (if not first)
+        // 2. Move Left
         if (position > 0) {
             options.add(getString(R.string.app_menu_move_left))
             actions.add {
@@ -120,7 +132,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 3. Move Right (if not last app before '+')
+        // 3. Move Right
         val totalApps = currentList.count { !it.isEmpty }
         if (position < totalApps - 1) {
             options.add(getString(R.string.app_menu_move_right))
@@ -133,7 +145,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 4. App Info (for regular apps)
+        // 4. App Info
         if (!app.isShortcut) {
             options.add(getString(R.string.app_menu_info))
             actions.add {
@@ -172,6 +184,32 @@ class MainActivity : AppCompatActivity() {
         val message = getString(R.string.about_message, versionName, getString(R.string.github_repo_url))
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_about, null)
         dialogView.findViewById<TextView>(R.id.aboutMessageText).text = message
+
+        // 1. Home button override switch
+        val homeOverrideSwitch = dialogView.findViewById<SwitchCompat>(R.id.homeOverrideSwitch)
+        homeOverrideSwitch.isChecked = TvHomeOverrideService.isHomeOverrideEnabled(this)
+        homeOverrideSwitch.setOnCheckedChangeListener { _, isChecked ->
+            TvHomeOverrideService.setHomeOverrideEnabled(this, isChecked)
+            if (isChecked) {
+                Toast.makeText(this, R.string.enable_accessibility_prompt, Toast.LENGTH_LONG).show()
+                try {
+                    startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                } catch (_: Exception) {
+                }
+            }
+        }
+
+        // 2. Stock Launcher RAM killer switch
+        val suppressRamSwitch = dialogView.findViewById<SwitchCompat>(R.id.suppressStockRamSwitch)
+        suppressRamSwitch.isChecked = TvHomeOverrideService.isSuppressStockLauncherEnabled(this)
+        suppressRamSwitch.setOnCheckedChangeListener { _, isChecked ->
+            TvHomeOverrideService.setSuppressStockLauncherEnabled(this, isChecked)
+            if (isChecked) {
+                RamOptimizationHelper.suppressStockLauncherRam(applicationContext)
+            }
+        }
+
+        // 3. Auto update switch
         val autoUpdateSwitch = dialogView.findViewById<SwitchCompat>(R.id.autoUpdateSwitch)
         autoUpdateSwitch.isChecked = AppUpdateManager.isAutoUpdateEnabled(this)
         autoUpdateSwitch.setOnCheckedChangeListener { _, isChecked ->
@@ -321,6 +359,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         loadAppSlots()
+        RamOptimizationHelper.suppressStockLauncherRam(applicationContext)
     }
 
     override fun onStop() {

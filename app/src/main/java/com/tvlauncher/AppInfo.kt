@@ -2,7 +2,11 @@ package com.tvlauncher
 
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.BitmapShader
 import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.RectF
+import android.graphics.Shader
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 
@@ -34,9 +38,9 @@ data class AppInfo(
                 icon = cachedIcon
             } else {
                 try {
-                    val loaded = packageManager.getApplicationIcon(packageName)
+                    val loaded = shortcutIcon ?: packageManager.getApplicationIcon(packageName)
                     icon = if (iconSizePx > 0) {
-                        scaleDrawable(loaded, iconSizePx)
+                        renderRoundedIcon(loaded, iconSizePx)
                     } else {
                         loaded
                     }
@@ -61,14 +65,28 @@ data class AppInfo(
         }
     }
 
-    private fun scaleDrawable(source: Drawable, sizePx: Int): Drawable {
-        if (sizePx <= 0) {
-            return source
-        }
-        val bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.RGB_565)
-        val canvas = Canvas(bitmap)
+    private fun renderRoundedIcon(source: Drawable, sizePx: Int): Drawable {
+        if (sizePx <= 0) return source
+
+        // Use ARGB_8888 for clean alpha blending on rounded corners, or fallback
+        val rawBitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+        val rawCanvas = Canvas(rawBitmap)
         source.setBounds(0, 0, sizePx, sizePx)
-        source.draw(canvas)
-        return BitmapDrawable(null, bitmap)
+        source.draw(rawCanvas)
+
+        val outputBitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+        val outputCanvas = Canvas(outputBitmap)
+
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            shader = BitmapShader(rawBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+        }
+
+        val rect = RectF(0f, 0f, sizePx.toFloat(), sizePx.toFloat())
+        // Modern 22% squircle-like corner radius for TV app icons
+        val cornerRadius = sizePx * 0.22f
+        outputCanvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
+
+        rawBitmap.recycle()
+        return BitmapDrawable(null, outputBitmap)
     }
 }

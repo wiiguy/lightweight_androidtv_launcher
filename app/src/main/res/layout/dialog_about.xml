@@ -1,33 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/dialog_bg"
-    android:orientation="vertical"
-    android:paddingStart="24dp"
-    android:paddingTop="12dp"
-    android:paddingEnd="24dp"
-    android:paddingBottom="12dp">
+    android:background="@color/dialog_bg">
 
-    <TextView
-        android:id="@+id/aboutMessageText"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:lineSpacingMultiplier="1.2"
-        android:textColor="@color/text_secondary"
-        android:textSize="14sp" />
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="16dp">
 
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/autoUpdateSwitch"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:focusable="true"
-        android:text="@string/update_auto_toggle"
-        android:textColor="@color/text_primary"
-        android:textSize="15sp"
-        app:thumbTint="@color/accent"
-        app:trackTint="@color/border_card" />
+        <TextView
+            android:id="@+id/aboutMessageText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:lineSpacingMultiplier="1.2"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp" />
 
-</LinearLayout>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp"
+            android:background="@color/border_card" />
+
+        <!-- Setting: Override Default TV Launcher -->
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/homeOverrideSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:text="@string/override_default_launcher"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            app:thumbTint="@color/accent"
+            app:trackTint="@color/border_card" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="10dp"
+            android:text="@string/override_default_launcher_desc"
+            android:textColor="@color/text_tertiary"
+            android:textSize="11sp" />
+
+        <!-- Setting: Suppress Stock Launcher RAM -->
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/suppressStockRamSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:text="@string/suppress_stock_ram"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            app:thumbTint="@color/accent"
+            app:trackTint="@color/border_card" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="10dp"
+            android:text="@string/suppress_stock_ram_desc"
+            android:textColor="@color/text_tertiary"
+            android:textSize="11sp" />
+
+        <!-- Setting: Weekly updates -->
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/autoUpdateSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:text="@string/update_auto_toggle"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            app:thumbTint="@color/accent"
+            app:trackTint="@color/border_card" />
+
+    </LinearLayout>
+</ScrollView>

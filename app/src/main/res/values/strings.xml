@@ -6,8 +6,8 @@
     <string name="done">Done</string>
     <string name="settings">Settings</string>
     <string name="shortcuts">Shortcuts</string>
-    <string name="about">About</string>
-    <string name="about_title">About</string>
+    <string name="about">About &amp; Settings</string>
+    <string name="about_title">Settings &amp; About</string>
     <string name="about_open_github">Open GitHub</string>
     <string name="about_close">Close</string>
     <string name="about_message">TV Launcher\nVersion %1$s\n\nFree and open source.\nLicense: CC BY-NC 4.0 (no selling).\n\n%2$s</string>
@@ -38,4 +38,12 @@
     <string name="update_auto_toggle">Automatic weekly updates</string>
     <string name="update_auto_off">Weekly updates disabled.</string>
     <string name="update_auto_on">Weekly updates enabled.</string>
+
+    <!-- TV Launcher Override & RAM optimization settings -->
+    <string name="override_default_launcher">Override TV Default Launcher</string>
+    <string name="override_default_launcher_desc">Intercepts TV Home key on devices that lock the default launcher</string>
+    <string name="enable_accessibility_prompt">Please enable "TV Launcher" under Accessibility Services to intercept the Home key.</string>
+    <string name="suppress_stock_ram">Kill Stock Launcher Background RAM</string>
+    <string name="suppress_stock_ram_desc">Frees 100MB+ RAM by stopping heavy OEM TV home screens</string>
+    <string name="accessibility_service_description">Allows TV Launcher to detect the Home button on TV remotes and return to this launcher.</string>
 </resources>
