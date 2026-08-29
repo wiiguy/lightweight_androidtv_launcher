@@ -114,13 +114,14 @@ class MainActivity : AppCompatActivity() {
         aboutButton.setOnClickListener { showAboutDialog() }
     }
 
-    private fun applyWallpaper(force: Boolean = false) {
+    private fun applyWallpaper(force: Boolean = false, onFinish: ((Boolean) -> Unit)? = null) {
         val mode = WallpaperManager.getWallpaperMode(this)
         val dimEnabled = WallpaperManager.isDimOverlayEnabled(this)
 
         if (mode == WallpaperManager.MODE_SOLID) {
             wallpaperImageView.visibility = View.GONE
             wallpaperDimOverlay.visibility = View.GONE
+            onFinish?.invoke(true)
             return
         }
 
@@ -133,9 +134,13 @@ class MainActivity : AppCompatActivity() {
                 wallpaperImageView.setImageDrawable(drawable)
                 wallpaperImageView.visibility = View.VISIBLE
                 wallpaperDimOverlay.visibility = if (dimEnabled) View.VISIBLE else View.GONE
-            } else if (mode == WallpaperManager.MODE_SOLID) {
-                wallpaperImageView.visibility = View.GONE
-                wallpaperDimOverlay.visibility = View.GONE
+                onFinish?.invoke(true)
+            } else {
+                if (mode == WallpaperManager.MODE_SOLID) {
+                    wallpaperImageView.visibility = View.GONE
+                    wallpaperDimOverlay.visibility = View.GONE
+                }
+                onFinish?.invoke(false)
             }
         }
     }
@@ -258,7 +263,10 @@ class MainActivity : AppCompatActivity() {
             .setNeutralButton(R.string.wallpaper_refresh_now) { _, _ ->
                 Toast.makeText(this, R.string.wallpaper_updating, Toast.LENGTH_SHORT).show()
                 saveWallpaperSettings()
-                applyWallpaper(force = true)
+                applyWallpaper(force = true) { success ->
+                    val hint = if (success) R.string.wallpaper_updated else R.string.wallpaper_failed
+                    Toast.makeText(this, hint, Toast.LENGTH_SHORT).show()
+                }
             }
             .setNegativeButton(R.string.cancel, null)
             .show()

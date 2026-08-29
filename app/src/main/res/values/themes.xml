@@ -10,8 +10,13 @@
 
     <style name="Theme.TVLauncher.AboutDialog" parent="Theme.AppCompat.Dialog.Alert">
         <item name="android:windowBackground">@color/dialog_bg</item>
+        <item name="android:colorBackground">@color/dialog_bg</item>
+        <item name="android:textColor">@color/text_primary</item>
         <item name="android:textColorPrimary">@color/text_primary</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="android:textColorAlertDialogListItem">@color/text_primary</item>
         <item name="colorAccent">@color/accent</item>
+        <item name="colorControlNormal">@color/text_secondary</item>
+        <item name="colorControlActivated">@color/accent</item>
     </style>
 </resources>
