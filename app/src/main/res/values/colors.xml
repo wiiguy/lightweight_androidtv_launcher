@@ -1,10 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
+    <!-- Modern dark theme palette -->
+    <color name="bg_main">#FF0E0E12</color>
+    <color name="bg_card">#1AFFFFFF</color>
+    <color name="bg_card_focused">#33FFFFFF</color>
+    <color name="border_card">#26FFFFFF</color>
+    <color name="border_focused">#FFFFFFFF</color>
+    <color name="accent">#FF6366F1</color>
+    <color name="accent_focused">#FF818CF8</color>
+    <color name="text_primary">#FFFFFFFF</color>
+    <color name="text_secondary">#99FFFFFF</color>
+    <color name="text_tertiary">#66FFFFFF</color>
+    <color name="dialog_bg">#FF18181F</color>
+
+    <!-- Legacy color aliases for backwards compatibility -->
+    <color name="purple_500">#FF6366F1</color>
+    <color name="teal_200">#FF818CF8</color>
+    <color name="teal_700">#FF4F46E5</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="dark_gray">#FF333333</color>
-    <color name="light_gray">#FFCCCCCC</color>
-    <color name="red_600">#FFD32F2F</color>
+    <color name="dark_gray">#FF0E0E12</color>
+    <color name="light_gray">#99FFFFFF</color>
+    <color name="red_600">#FFEF4444</color>
 </resources>

@@ -2,8 +2,11 @@ package com.tvlauncher
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -22,10 +25,12 @@ class AppSelectionActivity : AppCompatActivity() {
     private lateinit var doneButton: Button
     private lateinit var loadingProgress: ProgressBar
     private lateinit var titleText: TextView
+    private lateinit var searchEdit: EditText
     private lateinit var appManager: AppManager
     private lateinit var appSelectionAdapter: AppSelectionAdapter
     private lateinit var shortcutToggle: androidx.appcompat.widget.SwitchCompat
     private val selectedApps = linkedSetOf<String>()
+    private var allLoadedApps = listOf<AppInfo>()
     private var pendingAutoSelectId: String? = null
     private val selectionIconSizePx: Int by lazy { (60 * resources.displayMetrics.density).toInt() }
 
@@ -45,6 +50,7 @@ class AppSelectionActivity : AppCompatActivity() {
         doneButton = findViewById(R.id.doneButton)
         loadingProgress = findViewById(R.id.loadingProgress)
         titleText = findViewById(R.id.titleText)
+        searchEdit = findViewById(R.id.searchEdit)
         shortcutToggle = findViewById(R.id.shortcutToggle)
 
         appManager = AppManager(this)
@@ -67,6 +73,7 @@ class AppSelectionActivity : AppCompatActivity() {
         appList.recycledViewPool.setMaxRecycledViews(0, 5)
 
         setupClickListeners()
+        setupSearch()
         reloadAppList(invalidateCache = false)
 
         ContextCompat.registerReceiver(
@@ -75,6 +82,29 @@ class AppSelectionActivity : AppCompatActivity() {
             android.content.IntentFilter(LauncherBroadcast.ACTION_REFRESH_APP_SELECTION),
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
+    }
+
+    private fun setupSearch() {
+        searchEdit.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                filterApps(s?.toString().orEmpty())
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+    }
+
+    private fun filterApps(query: String) {
+        val trimmed = query.trim().lowercase()
+        val filtered = if (trimmed.isEmpty()) {
+            allLoadedApps
+        } else {
+            allLoadedApps.filter { app ->
+                app.getDisplayName().lowercase().contains(trimmed) ||
+                    app.packageName.lowercase().contains(trimmed)
+            }
+        }
+        appSelectionAdapter.submitList(filtered)
     }
 
     private fun onSelectionChanged(appIdentifier: String, isSelected: Boolean) {
@@ -107,9 +137,10 @@ class AppSelectionActivity : AppCompatActivity() {
             if (isFinishing) {
                 return@loadInstalledAppsAsync
             }
+            allLoadedApps = apps
             loadingProgress.visibility = View.GONE
             appList.visibility = View.VISIBLE
-            appSelectionAdapter.submitList(apps)
+            filterApps(searchEdit.text.toString())
             applyAutoSelectIfNeeded()
         }
     }

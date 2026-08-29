@@ -2,15 +2,17 @@ package com.tvlauncher
 
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.LayoutInflater
-import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.widget.SwitchCompat
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -18,10 +20,12 @@ import androidx.recyclerview.widget.RecyclerView
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appSlots: RecyclerView
-    private lateinit var settingsButton: Button
-    private lateinit var aboutButton: TextView
+    private lateinit var settingsButton: ImageButton
+    private lateinit var aboutButton: android.view.View
     private lateinit var appManager: AppManager
     private lateinit var appSlotAdapter: AppSlotAdapter
+    private var lastFocusedPosition: Int = 0
+
     /** Small bitmaps on home — avoids holding full-resolution launcher icons in RAM. */
     private val slotIconSizePx: Int by lazy { (60 * resources.displayMetrics.density).toInt() }
 
@@ -61,9 +65,14 @@ class MainActivity : AppCompatActivity() {
     private fun setupRecyclerView() {
         val slotSizePx = calculateSlotSizePx()
         appSlotAdapter = AppSlotAdapter(
-            mutableListOf(),
-            onSlotClick = { openAppSelection() },
-            onSlotLongClick = { position -> confirmRemoveApp(position) },
+            onSlotClick = { position ->
+                lastFocusedPosition = position
+                openAppSelection()
+            },
+            onSlotLongClick = { position ->
+                lastFocusedPosition = position
+                showAppContextMenu(position)
+            },
             slotSizePx = slotSizePx,
             iconSizePx = slotIconSizePx
         )
@@ -79,8 +88,83 @@ class MainActivity : AppCompatActivity() {
     private fun setupClickListeners() {
         settingsButton.setOnClickListener { openAndroidSettings() }
         aboutButton.setOnClickListener { showAboutDialog() }
-        settingsButton.isFocusable = false
-        aboutButton.isFocusable = true
+    }
+
+    private fun showAppContextMenu(position: Int) {
+        val currentList = appSlotAdapter.currentList
+        val slot = currentList.getOrNull(position) ?: return
+        val app = slot.appInfo ?: return
+
+        val options = mutableListOf<String>()
+        val actions = mutableListOf<() -> Unit>()
+
+        // 1. Open
+        options.add(getString(R.string.app_menu_open))
+        actions.add {
+            if (app.isShortcut) {
+                ShortcutHelper.launchShortcut(this, app.packageName, app.shortcutId!!)
+            } else {
+                ShortcutHelper.launchApp(this, app.packageName)
+            }
+        }
+
+        // 2. Move Left (if not first)
+        if (position > 0) {
+            options.add(getString(R.string.app_menu_move_left))
+            actions.add {
+                if (appManager.moveApp(position, position - 1)) {
+                    appManager.invalidateSelectionCache()
+                    lastFocusedPosition = position - 1
+                    loadAppSlots()
+                }
+            }
+        }
+
+        // 3. Move Right (if not last app before '+')
+        val totalApps = currentList.count { !it.isEmpty }
+        if (position < totalApps - 1) {
+            options.add(getString(R.string.app_menu_move_right))
+            actions.add {
+                if (appManager.moveApp(position, position + 1)) {
+                    appManager.invalidateSelectionCache()
+                    lastFocusedPosition = position + 1
+                    loadAppSlots()
+                }
+            }
+        }
+
+        // 4. App Info (for regular apps)
+        if (!app.isShortcut) {
+            options.add(getString(R.string.app_menu_info))
+            actions.add {
+                openAppDetails(app.packageName)
+            }
+        }
+
+        // 5. Remove
+        options.add(getString(R.string.remove))
+        actions.add {
+            confirmRemoveApp(app, position)
+        }
+
+        AlertDialog.Builder(this, R.style.Theme_TVLauncher_AboutDialog)
+            .setTitle(app.getDisplayName())
+            .setItems(options.toTypedArray()) { _, which ->
+                actions.getOrNull(which)?.invoke()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun openAppDetails(packageName: String) {
+        try {
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.fromParts("package", packageName, null)
+            }
+            startActivity(intent)
+        } catch (_: Exception) {
+            Toast.makeText(this, packageName, Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun showAboutDialog() {
@@ -149,7 +233,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun openUrl(url: String) {
         try {
-            startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url)))
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
         } catch (_: Exception) {
         }
     }
@@ -160,7 +244,7 @@ class MainActivity : AppCompatActivity() {
         val density = displayMetrics.density
         val columns = HOME_GRID_COLUMNS
 
-        val sideMarginPx = (16 * density).toInt() * 2
+        val sideMarginPx = (24 * density).toInt() * 2
         val recyclerPaddingPx = (8 * density).toInt() * 2
         val itemMarginPx = (8 * density).toInt()
         val totalItemMarginsPx = itemMarginPx * 2 * columns
@@ -168,19 +252,19 @@ class MainActivity : AppCompatActivity() {
         val availablePx = screenWidthPx - sideMarginPx - recyclerPaddingPx - totalItemMarginsPx
         val rawSize = availablePx / columns
         val minSize = (96 * density).toInt()
-        val maxSize = (120 * density).toInt()
+        val maxSize = (130 * density).toInt()
         return rawSize.coerceIn(minSize, maxSize)
     }
 
     private fun openAndroidSettings() {
         try {
-            startActivity(Intent(android.provider.Settings.ACTION_SETTINGS))
+            startActivity(Intent(Settings.ACTION_SETTINGS))
         } catch (_: Exception) {
             try {
                 startActivity(Intent("android.settings.TV_SETTINGS"))
             } catch (_: Exception) {
                 try {
-                    startActivity(Intent(android.provider.Settings.ACTION_DEVICE_INFO_SETTINGS))
+                    startActivity(Intent(Settings.ACTION_DEVICE_INFO_SETTINGS))
                 } catch (_: Exception) {
                 }
             }
@@ -195,31 +279,35 @@ class MainActivity : AppCompatActivity() {
             slots.add(AppSlotAdapter.AppSlot(app, false))
         }
 
-        // Always show "+" so user can add or change apps (even when 8 are already pinned)
+        // Always show "+" so user can add or change apps
         slots.add(AppSlotAdapter.AppSlot(null, true))
 
-        appSlotAdapter.updateSlots(slots)
-        appSlots.visibility = android.view.View.VISIBLE
-
-        appSlots.post {
-            if (appSlots.childCount > 0) {
-                appSlots.getChildAt(0).requestFocus()
-            }
-            settingsButton.isFocusable = true
+        appSlotAdapter.submitList(slots) {
+            restoreFocus()
         }
     }
 
-    private fun confirmRemoveApp(position: Int) {
-        val slot = appSlotAdapter.slots.getOrNull(position) ?: return
-        val app = slot.appInfo ?: return
+    private fun restoreFocus() {
+        appSlots.post {
+            val targetPos = lastFocusedPosition.coerceIn(0, (appSlotAdapter.itemCount - 1).coerceAtLeast(0))
+            val holder = appSlots.findViewHolderForAdapterPosition(targetPos)
+            if (holder != null) {
+                holder.itemView.requestFocus()
+            } else if (appSlots.childCount > 0) {
+                appSlots.getChildAt(0).requestFocus()
+            }
+        }
+    }
 
-        AlertDialog.Builder(this)
+    private fun confirmRemoveApp(app: AppInfo, position: Int) {
+        AlertDialog.Builder(this, R.style.Theme_TVLauncher_AboutDialog)
             .setTitle(R.string.remove_app_title)
             .setMessage(getString(R.string.remove_app_message, app.getDisplayName()))
             .setPositiveButton(R.string.remove) { _, _ ->
                 appManager.removeSelectedApp(AppIdentifier.encode(app))
                 appManager.invalidateSelectionCache()
                 LauncherBroadcast.refreshHome(this)
+                lastFocusedPosition = (position - 1).coerceAtLeast(0)
                 loadAppSlots()
             }
             .setNegativeButton(R.string.cancel, null)

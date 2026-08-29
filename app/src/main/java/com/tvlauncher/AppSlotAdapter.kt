@@ -1,19 +1,23 @@
 package com.tvlauncher
 
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 
 class AppSlotAdapter(
-    var slots: MutableList<AppSlot>,
-    private val onSlotClick: () -> Unit,
+    private val onSlotClick: (Int) -> Unit,
     private val onSlotLongClick: (Int) -> Unit,
     private val slotSizePx: Int,
     private val iconSizePx: Int = 0
-) : RecyclerView.Adapter<AppSlotAdapter.AppSlotViewHolder>() {
+) : ListAdapter<AppSlotAdapter.AppSlot, AppSlotAdapter.AppSlotViewHolder>(DIFF_CALLBACK) {
 
     data class AppSlot(
         val appInfo: AppInfo? = null,
@@ -25,6 +29,29 @@ class AppSlotAdapter(
         val appName: TextView = itemView.findViewById(R.id.appName)
         val plusButton: TextView = itemView.findViewById(R.id.plusButton)
         val addText: TextView = itemView.findViewById(R.id.addText)
+
+        init {
+            itemView.setOnFocusChangeListener { view, hasFocus ->
+                animateFocus(view, hasFocus)
+            }
+        }
+
+        private fun animateFocus(view: View, hasFocus: Boolean) {
+            val scale = if (hasFocus) 1.08f else 1.0f
+            val scaleX = ObjectAnimator.ofFloat(view, View.SCALE_X, scale)
+            val scaleY = ObjectAnimator.ofFloat(view, View.SCALE_Y, scale)
+            AnimatorSet().apply {
+                playTogether(scaleX, scaleY)
+                duration = 150
+                interpolator = DecelerateInterpolator()
+                start()
+            }
+            if (hasFocus) {
+                view.elevation = 8f
+            } else {
+                view.elevation = 0f
+            }
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppSlotViewHolder {
@@ -38,7 +65,7 @@ class AppSlotAdapter(
     }
 
     override fun onBindViewHolder(holder: AppSlotViewHolder, position: Int) {
-        val slot = slots[position]
+        val slot = getItem(position)
         holder.itemView.setOnLongClickListener(null)
 
         if (slot.isEmpty) {
@@ -47,7 +74,12 @@ class AppSlotAdapter(
             holder.plusButton.visibility = View.VISIBLE
             holder.addText.visibility = View.VISIBLE
 
-            holder.itemView.setOnClickListener { onSlotClick() }
+            holder.itemView.setOnClickListener {
+                val pos = holder.bindingAdapterPosition
+                if (pos != RecyclerView.NO_POSITION) {
+                    onSlotClick(pos)
+                }
+            }
         } else {
             slot.appInfo?.let { app ->
                 holder.appIcon.setImageDrawable(
@@ -72,18 +104,35 @@ class AppSlotAdapter(
                     }
                 }
                 holder.itemView.setOnLongClickListener {
-                    onSlotLongClick(holder.bindingAdapterPosition)
+                    val pos = holder.bindingAdapterPosition
+                    if (pos != RecyclerView.NO_POSITION) {
+                        onSlotLongClick(pos)
+                    }
                     true
                 }
             }
         }
     }
 
-    override fun getItemCount(): Int = slots.size
+    companion object {
+        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<AppSlot>() {
+            override fun areItemsTheSame(oldItem: AppSlot, newItem: AppSlot): Boolean {
+                if (oldItem.isEmpty && newItem.isEmpty) return true
+                if (oldItem.isEmpty != newItem.isEmpty) return false
+                val oldApp = oldItem.appInfo ?: return false
+                val newApp = newItem.appInfo ?: return false
+                return AppIdentifier.encode(oldApp) == AppIdentifier.encode(newApp)
+            }
 
-    fun updateSlots(newSlots: List<AppSlot>) {
-        slots.clear()
-        slots.addAll(newSlots)
-        notifyDataSetChanged()
+            override fun areContentsTheSame(oldItem: AppSlot, newItem: AppSlot): Boolean {
+                if (oldItem.isEmpty && newItem.isEmpty) return true
+                val oldApp = oldItem.appInfo ?: return false
+                val newApp = newItem.appInfo ?: return false
+                return oldApp.packageName == newApp.packageName &&
+                    oldApp.appName == newApp.appName &&
+                    oldApp.shortcutId == newApp.shortcutId &&
+                    oldApp.shortcutLabel == newApp.shortcutLabel
+            }
+        }
     }
 }

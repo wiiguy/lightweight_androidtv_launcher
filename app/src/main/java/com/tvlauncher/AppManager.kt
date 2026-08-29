@@ -9,6 +9,7 @@ import android.os.Handler
 import android.os.Looper
 import androidx.annotation.RequiresApi
 import java.lang.ref.WeakReference
+import java.util.Collections
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -192,6 +193,19 @@ class AppManager(private val context: Context) {
         cachedSelectedOrder = ordered
     }
 
+    fun moveApp(fromPosition: Int, toPosition: Int): Boolean {
+        val current = getSelectedApps().toMutableList()
+        if (fromPosition < 0 || fromPosition >= current.size ||
+            toPosition < 0 || toPosition >= current.size ||
+            fromPosition == toPosition
+        ) {
+            return false
+        }
+        Collections.swap(current, fromPosition, toPosition)
+        saveSelectedApps(current)
+        return true
+    }
+
     fun canAddMoreSelections(currentCount: Int = getSelectedApps().size): Boolean {
         return currentCount < MAX_SLOTS
     }
@@ -329,7 +343,7 @@ class AppManager(private val context: Context) {
         private const val PREF_APPS_ORDER = "apps_order"
         private const val PREF_APPS_LEGACY = "apps"
         private const val PREF_SHORTCUTS_ENABLED = "shortcuts_enabled"
-        private const val ORDER_DELIMITER = "\u001E"
+        private const val ORDER_DELIMITER = ""
         private const val ICON_CACHE_MAX = 16
         private val instances = mutableListOf<WeakReference<AppManager>>()
 
