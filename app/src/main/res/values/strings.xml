@@ -14,7 +14,7 @@
     <string name="about_title">Settings &amp; About</string>
     <string name="about_open_github">Open GitHub</string>
     <string name="about_close">Close</string>
-    <string name="about_message">TV Launcher\nVersion %1$s\n\nFree and open source.\nLicense: CC BY-NC 4.0 (no selling).\n\n%2$s</string>
+    <string name="about_message">TV Launcher\nVersion %1$s\n\nFree and open source.\nLicense: GNU GPL v3.0.\n\n%2$s</string>
     <string name="github_repo_url">https://github.com/wiiguy/lightweight_androidtv_launcher</string>
     <string name="add_app">Add App</string>
     <string name="slot_limit_reached">Home screen is full (max %1$d apps).</string>

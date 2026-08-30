@@ -168,4 +168,4 @@ This release includes significant contributions from **[Jiten Dhull](https://git
 
 ## License
 
-See [LICENSE](LICENSE).
+Licensed under the [GNU General Public License v3.0](LICENSE) (GPL-3.0).
