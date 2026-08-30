@@ -1,6 +1,6 @@
 # TV Launcher
 
-**Version 1.6.0** — A lightweight Android TV home launcher focused on low RAM use and a simple, customizable app grid. Built with AI assistance.
+**Version 1.6.1** — A lightweight Android TV home launcher focused on low RAM use and a simple, customizable app grid. Built with AI assistance.
 
 > ⚠️ **Use at your own risk.** This app replaces your TV's home screen and includes optional system-level features (accessibility-based Home key override, stock launcher RAM killer, automatic updates). While the code is open source and audited, you install and use it entirely at your own risk — no warranty, express or implied.
 
@@ -116,7 +116,7 @@ The app ships in two flavors:
 
 GitHub release APK: `app/build/outputs/apk/github/release/app-github-release.apk` (uploaded to releases as `app-release.apk`).
 
-Pushing a tag like `v1.6.0` triggers the [release workflow](.github/workflows/release.yml) to build and publish a signed APK. The workflow sets `versionName` and `versionCode` from the tag (e.g. `v1.6.0` → `1.6.0` / `10600`) and verifies the APK before upload (requires signing secrets in the repo).
+Pushing a tag like `v1.6.1` triggers the [release workflow](.github/workflows/release.yml) to build and publish a signed APK. The workflow sets `versionName` and `versionCode` from the tag (e.g. `v1.6.1` → `1.6.1` / `10601`) and verifies the APK before upload (requires signing secrets in the repo).
 
 ## Requirements
 
