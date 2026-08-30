@@ -145,7 +145,6 @@ Measured on a typical Android TV (release build, home screen, ~6–8 pinned apps
 | Release, auto-update **on** (default) | **~30–40 MB** (falls to ~27 MB after a fresh start; WorkManager + extra code load it a bit) |
 | + Home button override **on** | **~45–50 MB** (accessibility service keeps the process resident) |
 | + Cycling online wallpaper | **~55–60 MB** on 1080p sets (full-screen bitmap) |
-| Debug build | **~60+ MB** |
 
 RAM also depends on how many apps are pinned and whether the add-apps screen was opened recently. The override and wallpaper features are off by default, keeping the default configuration lean.
 
