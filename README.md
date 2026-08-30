@@ -5,7 +5,7 @@
 ## Features
 
 - **Up to 15 icons on home** — 14 apps plus a permanent **"+"** tile to add or change apps
-- **Low memory** — Release builds typically use **~30–40 MB PSS** on the home screen when automatic updates are off (varies by device and pinned apps)
+- **Low memory** — Release builds use **~30–40 MB PSS** on the home screen (measured ~27–38 MB on a typical TV; varies by device, pinned apps, and background checks)
 - **Fast app picker** — Loads the full app list in the background with a loading indicator
 - **App search & filter chips** — Search as you type, plus All / Selected / Shortcuts tabs in the add-apps screen
 - **App reordering & context menu** — Long-press an app for Open, Move Left, Move Right, App Info, or Remove
@@ -132,19 +132,19 @@ When **Automatic weekly updates** is enabled (default), the app uses **Android W
 **Notes:**
 
 - Allow **Install unknown apps** for TV Launcher when prompted.
-- Turn off background checks: **About** → disable **Automatic weekly updates**. This frees ~15–20 MB RAM and cancels the scheduled job; **Check for updates** still works manually.
+- Turn off background checks: **About** → disable **Automatic weekly updates**. This cancels the scheduled job and reduces background activity; **Check for updates** still works manually.
 - Updates only appear after a release is published on GitHub with `app-release.apk` attached.
 
 ## Memory notes
 
-Measured on a typical Android TV (release build, home screen, ~6–8 pinned apps):
+Measured on a typical Android TV (release build, home screen, ~6–8 pinned apps; values are `TOTAL PSS`):
 
 | Configuration | Approx. PSS |
 |---------------|-------------|
-| Release, auto-update **off** | **~30–35 MB** |
-| Release, auto-update **on** (default) | **~40–55 MB** (WorkManager + extra code loaded) |
-| + Home button override **on** | **~48–60 MB** (accessibility service keeps the process resident) |
-| + Cycling online wallpaper | **~55–65 MB** on 1080p sets (full-screen bitmap) |
+| Release, auto-update **off** | **~25–30 MB** |
+| Release, auto-update **on** (default) | **~30–40 MB** (falls to ~27 MB after a fresh start; WorkManager + extra code load it a bit) |
+| + Home button override **on** | **~45–50 MB** (accessibility service keeps the process resident) |
+| + Cycling online wallpaper | **~55–60 MB** on 1080p sets (full-screen bitmap) |
 | Debug build | **~60+ MB** |
 
 RAM also depends on how many apps are pinned and whether the add-apps screen was opened recently. The override and wallpaper features are off by default, keeping the default configuration lean.
