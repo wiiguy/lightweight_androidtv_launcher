@@ -15,6 +15,18 @@ android {
         versionName "1.6.0"
     }
 
+    flavorDimensions "store"
+    productFlavors {
+        github {
+            dimension "store"
+            buildConfigField "boolean", "UPDATES_ENABLED", "true"
+        }
+        fdroid {
+            dimension "store"
+            buildConfigField "boolean", "UPDATES_ENABLED", "false"
+        }
+    }
+
     signingConfigs {
         debug {
             // Use default debug keystore

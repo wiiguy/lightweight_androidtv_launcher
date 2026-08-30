@@ -52,12 +52,17 @@ jobs:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
 
       - name: Build release APK
-        run: ./gradlew assembleRelease --no-daemon
+        run: ./gradlew assembleGithubRelease --no-daemon
         env:
           SIGNING_STORE_FILE: ${{ github.workspace }}/release.keystore
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+
+      - name: Rename APK for release
+        run: |
+          mv app/build/outputs/apk/github/release/app-github-release.apk \
+             app/build/outputs/apk/github/release/app-release.apk
 
       - name: Verify APK version matches tag
         run: |
@@ -75,14 +80,14 @@ jobs:
             ls -la "${SDK_ROOT}/build-tools/" || true
             exit 1
           fi
-          BADGING=$("$AAPT" dump badging app/build/outputs/apk/release/app-release.apk)
+          BADGING=$("$AAPT" dump badging app/build/outputs/apk/github/release/app-release.apk)
           echo "$BADGING" | grep -F "versionName='${TAG}'"
           echo "$BADGING" | grep -F "versionCode='${VERSION_CODE}'"
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/apk/release/app-release.apk
+          files: app/build/outputs/apk/github/release/app-release.apk
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -6,7 +6,9 @@ import android.content.ComponentCallbacks2
 class TvLauncherApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        AppUpdateManager.scheduleWeeklyCheck(this)
+        if (BuildConfig.UPDATES_ENABLED) {
+            AppUpdateManager.scheduleWeeklyCheck(this)
+        }
     }
 
     override fun onTrimMemory(level: Int) {

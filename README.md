@@ -90,8 +90,8 @@ Copy the APK to the TV (USB, network share, or file transfer), enable **Unknown 
 | Option | What it does |
 |--------|----------------|
 | **Open GitHub** | Opens the project repository in a browser |
-| **Check for updates** | Checks GitHub now, downloads if newer, then prompts to install |
-| **Automatic weekly updates** | Toggle (default **on**). When on, Android schedules a background check about every 7 days while online |
+| **Check for updates** | Checks GitHub now, downloads if newer, then prompts to install *(GitHub build only)* |
+| **Automatic weekly updates** | Toggle (default **on**). When on, Android schedules a background check about every 7 days while online *(GitHub build only)* |
 | **Override TV default launcher** | Toggle (default **off**). Intercepts the Home key on devices that lock the default launcher; requires enabling the Accessibility service |
 | **Kill stock launcher RAM** | Toggle (default **off**). Stops pre-installed OEM TV launchers from holding background RAM (with a confirmation prompt) |
 | **Close** | Dismiss the dialog |
@@ -101,13 +101,18 @@ Copy the APK to the TV (USB, network share, or file transfer), enable **Unknown 
 Requires JDK 17 and the Android SDK (API 34).
 
 ```bash
-./gradlew assembleRelease    # optimized APK (~1 MB), recommended
-./gradlew assembleDebug      # faster builds, higher RAM on device
-./gradlew test               # unit tests
-./gradlew lint               # lint checks
+./gradlew assembleGithubRelease   # GitHub build with in-app updater (recommended)
+./gradlew assembleFdroidRelease    # F-Droid build without the in-app updater
+./gradlew assembleGithubDebug      # faster debug builds, higher RAM on device
+./gradlew test                     # unit tests
+./gradlew lint                     # lint checks
 ```
 
-Release APK: `app/build/outputs/apk/release/app-release.apk`
+The app ships in two flavors:
+- **`github`** — what GitHub users install; includes the automatic weekly updater that downloads new releases from GitHub.
+- **`fdroid`** — built from the same source for the F-Droid repo; the in-app updater is compiled out (updates come through F-Droid), and `REQUEST_INSTALL_PACKAGES` is not requested.
+
+GitHub release APK: `app/build/outputs/apk/github/release/app-github-release.apk` (uploaded to releases as `app-release.apk`).
 
 Pushing a tag like `v1.6.0` triggers the [release workflow](.github/workflows/release.yml) to build and publish a signed APK. The workflow sets `versionName` and `versionCode` from the tag (e.g. `v1.6.0` → `1.6.0` / `10600`) and verifies the APK before upload (requires signing secrets in the repo).
 
@@ -118,7 +123,7 @@ Pushing a tag like `v1.6.0` triggers the [release workflow](.github/workflows/re
 - Permissions:
   - `QUERY_ALL_PACKAGES` — discover installed apps
   - `INTERNET` — update check and APK download from GitHub (only when checking or updating)
-  - `REQUEST_INSTALL_PACKAGES` — install downloaded updates (you approve the system install screen)
+  - `REQUEST_INSTALL_PACKAGES` — install downloaded updates (you approve the system install screen) *(GitHub build only)*
 
 ## Automatic updates
 

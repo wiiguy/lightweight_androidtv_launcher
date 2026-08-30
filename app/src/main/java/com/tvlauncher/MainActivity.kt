@@ -409,29 +409,38 @@ class MainActivity : AppCompatActivity() {
         // 3. Auto update switch
         val cardAutoUpdate = dialogView.findViewById<LinearLayout>(R.id.cardAutoUpdate)
         val autoUpdateSwitch = dialogView.findViewById<SwitchCompat>(R.id.autoUpdateSwitch)
-        autoUpdateSwitch.isChecked = AppUpdateManager.isAutoUpdateEnabled(this)
 
-        cardAutoUpdate.setOnClickListener {
-            autoUpdateSwitch.toggle()
+        if (!BuildConfig.UPDATES_ENABLED) {
+            // F-Droid build: updates are not available here, hide the entire card.
+            cardAutoUpdate.visibility = View.GONE
+        } else {
+            autoUpdateSwitch.isChecked = AppUpdateManager.isAutoUpdateEnabled(this)
+
+            cardAutoUpdate.setOnClickListener {
+                autoUpdateSwitch.toggle()
+            }
+
+            autoUpdateSwitch.setOnCheckedChangeListener { _, isChecked ->
+                AppUpdateManager.setAutoUpdateEnabled(this, isChecked)
+                val hint = if (isChecked) R.string.update_auto_on else R.string.update_auto_off
+                Toast.makeText(this, hint, Toast.LENGTH_SHORT).show()
+            }
         }
 
-        autoUpdateSwitch.setOnCheckedChangeListener { _, isChecked ->
-            AppUpdateManager.setAutoUpdateEnabled(this, isChecked)
-            val hint = if (isChecked) R.string.update_auto_on else R.string.update_auto_off
-            Toast.makeText(this, hint, Toast.LENGTH_SHORT).show()
-        }
-
-        AlertDialog.Builder(this, R.style.Theme_TVLauncher_AboutDialog)
+        val builder = AlertDialog.Builder(this, R.style.Theme_TVLauncher_AboutDialog)
             .setTitle(R.string.about_title)
             .setView(dialogView)
             .setPositiveButton(R.string.about_open_github) { _, _ ->
                 openUrl(getString(R.string.github_repo_url))
             }
-            .setNeutralButton(R.string.update_check_now) { _, _ ->
+            .setNegativeButton(R.string.about_close, null)
+        if (BuildConfig.UPDATES_ENABLED) {
+            // F-Droid build: no in-app update checking.
+            builder.setNeutralButton(R.string.update_check_now) { _, _ ->
                 checkForUpdatesManually()
             }
-            .setNegativeButton(R.string.about_close, null)
-            .show()
+        }
+        builder.show()
     }
 
     private fun openAccessibilitySettings() {
