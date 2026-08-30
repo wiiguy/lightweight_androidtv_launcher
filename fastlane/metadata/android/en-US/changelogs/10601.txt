@@ -1,0 +1,4 @@
+* New F-Droid build: the in-app self-updater is removed, updates are delivered through F-Droid
+* Project relicensed under GPL-3.0
+* Modernized home screen UI and app selection window (see v1.6.0)
+* Lower RAM usage on supported devices (optional stock launcher optimization)

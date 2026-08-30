@@ -1,0 +1,12 @@
+A fast, minimal home launcher for Android TV and TV boxes. It replaces the stock launcher with a simple app grid, a lightweight dark interface, and low RAM usage.
+
+Features:
+* Up to 14 apps on the home screen plus a permanent tile for adding apps
+* App search and filter chips (All / Selected / Shortcuts) when picking apps
+* Long-press context menu: Open, Move Left, Move Right, App Info, Remove
+* Optional pinned shortcuts (e.g. from Activity Launcher)
+* Optional cycling online wallpapers (Wallhaven, Bing, Picsum, Reddit), custom image URLs, and a dim overlay - solid dark background by default
+* Optional Home key override via the accessibility service for devices that lock the default launcher (off by default)
+* Optional stock launcher RAM optimization (off by default)
+
+The build on F-Droid does not include the self-update feature; updates are delivered through F-Droid.
