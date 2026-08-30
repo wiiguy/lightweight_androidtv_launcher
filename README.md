@@ -7,9 +7,15 @@
 - **Up to 15 icons on home** — 14 apps plus a permanent **"+"** tile to add or change apps
 - **Low memory** — Release builds typically use **~30–40 MB PSS** on the home screen when automatic updates are off (varies by device and pinned apps)
 - **Fast app picker** — Loads the full app list in the background with a loading indicator
+- **App search & filter chips** — Search as you type, plus All / Selected / Shortcuts tabs in the add-apps screen
+- **App reordering & context menu** — Long-press an app for Open, Move Left, Move Right, App Info, or Remove
 - **Pinned shortcuts** — Optional support for shortcuts (e.g. from Activity Launcher)
 - **Long-press to remove** — Remove an app from the home screen without opening the picker
 - **Stable app order** — Your home row order is saved and restored across restarts
+- **Modern dark UI** — OLED-friendly theme with frosted card tiles and rounded app icons
+- **Optional wallpaper engine** — Cycling online wallpapers (Wallhaven / Bing / Picsum / Reddit), a custom image URL mode, and a dim overlay (solid background by default)
+- **Optional home button override** — Intercept the TV Home key on locked-down firmware via the Accessibility service (off by default)
+- **Optional stock launcher RAM killer** — Stop pre-installed OEM TV launchers from holding background RAM (off by default)
 - **Optional auto-updates** — Weekly check for new GitHub releases (on by default; can be disabled in About)
 
 ## Quick start
@@ -71,18 +77,23 @@ Copy the APK to the TV (USB, network share, or file transfer), enable **Unknown 
 |--------|-----|
 | **Add or change apps** | Focus the **"+"** tile → select → pick apps (max 14) → **Done** |
 | **Launch an app** | Select its icon on the home screen |
+| **App menu** | Long-press an icon → **Open**, **Move Left**, **Move Right**, **App Info**, or **Remove** |
 | **Remove an app** | Long-press the icon → **Remove** |
 | **Shortcuts** | Turn **Shortcuts** on in the add-apps screen; pin shortcuts from supported apps |
-| **System settings** | Press **Settings** on the home screen |
-| **About** | Focus **About** (bottom-right) — version, GitHub link, update options |
+| **Search apps** | In the add-apps screen, type in the search field or use the All / Selected / Shortcuts chips |
+| **Wallpaper** | Press the **picture** button (top-right) — solid, cycling online, or custom URL |
+| **System settings** | Press the **gear** button (top-right) |
+| **About & Settings** | Focus **About & Settings** (bottom-right) — version, GitHub link, update options, home override & RAM killer toggles |
 
-### About screen
+### About & Settings screen
 
 | Option | What it does |
 |--------|----------------|
 | **Open GitHub** | Opens the project repository in a browser |
 | **Check for updates** | Checks GitHub now, downloads if newer, then prompts to install |
 | **Automatic weekly updates** | Toggle (default **on**). When on, Android schedules a background check about every 7 days while online |
+| **Override TV default launcher** | Toggle (default **off**). Intercepts the Home key on devices that lock the default launcher; requires enabling the Accessibility service |
+| **Kill stock launcher RAM** | Toggle (default **off**). Stops pre-installed OEM TV launchers from holding background RAM (with a confirmation prompt) |
 | **Close** | Dismiss the dialog |
 
 ## Build from source
@@ -98,7 +109,7 @@ Requires JDK 17 and the Android SDK (API 34).
 
 Release APK: `app/build/outputs/apk/release/app-release.apk`
 
-Pushing a tag like `v1.5.3` triggers the [release workflow](.github/workflows/release.yml) to build and publish a signed APK. The workflow sets `versionName` and `versionCode` from the tag (e.g. `v1.5.3` → `1.5.3` / `10503`) and verifies the APK before upload (requires signing secrets in the repo).
+Pushing a tag like `v1.6.0` triggers the [release workflow](.github/workflows/release.yml) to build and publish a signed APK. The workflow sets `versionName` and `versionCode` from the tag (e.g. `v1.6.0` → `1.6.0` / `10600`) and verifies the APK before upload (requires signing secrets in the repo).
 
 ## Requirements
 
@@ -126,15 +137,17 @@ When **Automatic weekly updates** is enabled (default), the app uses **Android W
 
 ## Memory notes
 
-Measured on a typical Android TV (release build, home screen, ~8 pinned apps):
+Measured on a typical Android TV (release build, home screen, ~6–8 pinned apps):
 
 | Configuration | Approx. PSS |
 |---------------|-------------|
 | Release, auto-update **off** | **~30–35 MB** |
-| Release, auto-update **on** | **~50–55 MB** (WorkManager + extra code loaded) |
+| Release, auto-update **on** (default) | **~40–55 MB** (WorkManager + extra code loaded) |
+| + Home button override **on** | **~48–60 MB** (accessibility service keeps the process resident) |
+| + Cycling online wallpaper | **~55–65 MB** on 1080p sets (full-screen bitmap) |
 | Debug build | **~60+ MB** |
 
-RAM also depends on how many apps are pinned and whether the add-apps screen was opened recently.
+RAM also depends on how many apps are pinned and whether the add-apps screen was opened recently. The override and wallpaper features are off by default, keeping the default configuration lean.
 
 To check on a connected device:
 
