@@ -142,6 +142,18 @@ To check on a connected device:
 adb shell dumpsys meminfo com.tvlauncher | grep "TOTAL PSS"
 ```
 
+## Credits
+
+This release includes significant contributions from **[Jiten Dhull](https://github.com/jitendhull)** (PR #3). Thanks for the modernized UI and the new TV features:
+
+- **Modern dark UI** — OLED-friendly palette (#0E0E12), frosted card tiles, larger app icons with rounded corners
+- **App reordering & context menu** — long-press an app to Move Left / Move Right, open App Info, or Remove
+- **Home button override** — optional, off by default; accessibility-based service that intercepts the TV Home key on locked-down firmware (Google TV / Fire TV / Xiaomi)
+- **Stock launcher RAM killer** — optional, off by default; stops pre-installed OEM TV launchers from hogging background RAM
+- **Real-time app search & filter chips** — All / Selected / Shortcuts tabs in the add-apps screen
+- **Wallpaper engine** — optional, off by default (solid by default); cycling online wallpapers (Wallhaven / Bing / Picsum / Reddit), custom image URLs, and a dim overlay
+- **Adapter performance** — DiffUtil-based ListAdapter swaps that remove full `notifyDataSetChanged` refreshes
+
 ## License
 
 See [LICENSE](LICENSE).
