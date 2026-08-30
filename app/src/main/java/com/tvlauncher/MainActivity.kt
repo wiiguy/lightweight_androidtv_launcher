@@ -387,9 +387,22 @@ class MainActivity : AppCompatActivity() {
         }
 
         suppressRamSwitch.setOnCheckedChangeListener { _, isChecked ->
-            TvHomeOverrideService.setSuppressStockLauncherEnabled(this, isChecked)
-            if (isChecked) {
-                RamOptimizationHelper.suppressStockLauncherRam(applicationContext)
+            if (isChecked && !TvHomeOverrideService.isSuppressStockLauncherEnabled(this)) {
+                // Confirm before enabling the RAM killer: it stops background
+                // processes of pre-installed TV launchers to free memory.
+                AlertDialog.Builder(this, R.style.Theme_TVLauncher_AboutDialog)
+                    .setTitle(R.string.suppress_stock_ram)
+                    .setMessage(R.string.suppress_stock_ram_confirm)
+                    .setPositiveButton(R.string.enable) { _, _ ->
+                        TvHomeOverrideService.setSuppressStockLauncherEnabled(this, true)
+                        RamOptimizationHelper.suppressStockLauncherRam(applicationContext)
+                    }
+                    .setNegativeButton(R.string.cancel) { _, _ ->
+                        suppressRamSwitch.isChecked = false
+                    }
+                    .show()
+            } else {
+                TvHomeOverrideService.setSuppressStockLauncherEnabled(this, isChecked)
             }
         }
 

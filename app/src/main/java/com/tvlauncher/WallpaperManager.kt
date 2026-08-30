@@ -47,6 +47,7 @@ object WallpaperManager {
     private const val PREF_DIM_OVERLAY = "wallpaper_dim_overlay"
     private const val PREF_LAST_FETCH_TIME = "wallpaper_last_fetch_time"
     private const val CACHE_FILE_NAME = "current_wallpaper.jpg"
+    private const val MAX_REDIRECTS = 5
 
     private val executor = Executors.newSingleThreadExecutor()
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -286,23 +287,34 @@ object WallpaperManager {
     private fun downloadAndCacheImage(context: Context, imageUrl: String): Boolean {
         var currentUrl = imageUrl
         var redirects = 0
-        while (redirects < 5) {
+        while (redirects < MAX_REDIRECTS) {
+            // Only ever fetch http(s); never file://, content://, etc.
+            if (!isAllowedImageUrl(currentUrl)) return false
+            val url = try {
+                URL(currentUrl)
+            } catch (_: Exception) {
+                return false
+            }
+            var conn: HttpURLConnection? = null
             try {
-                val url = URL(currentUrl)
-                val conn = (url.openConnection() as HttpURLConnection).apply {
+                conn = (url.openConnection() as HttpURLConnection).apply {
                     connectTimeout = 12000
                     readTimeout = 12000
-                    instanceFollowRedirects = true
+                    // Redirects are handled manually below (single mechanism),
+                    // each hop is scheme-checked and capped by MAX_REDIRECTS.
+                    instanceFollowRedirects = false
                     setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
                 }
 
                 val status = conn.responseCode
                 if (status == HttpURLConnection.HTTP_MOVED_TEMP ||
                     status == HttpURLConnection.HTTP_MOVED_PERM ||
-                    status == HttpURLConnection.HTTP_SEE_OTHER
+                    status == HttpURLConnection.HTTP_SEE_OTHER ||
+                    status == 307 || status == 308
                 ) {
                     val location = conn.getHeaderField("Location") ?: return false
-                    currentUrl = location
+                    // Resolve relative redirects against the current URL
+                    currentUrl = URL(url, location).toString()
                     redirects++
                     continue
                 }
@@ -322,14 +334,26 @@ object WallpaperManager {
                 }
 
                 val destFile = File(context.cacheDir, CACHE_FILE_NAME)
-                if (destFile.exists()) destFile.delete()
-                tempFile.renameTo(destFile)
+                if (destFile.exists() && !destFile.delete()) {
+                    tempFile.delete()
+                    return false
+                }
+                if (!tempFile.renameTo(destFile)) {
+                    tempFile.delete()
+                    return false
+                }
                 return true
             } catch (_: Exception) {
                 return false
+            } finally {
+                conn?.disconnect()
             }
         }
         return false
+    }
+
+    private fun isAllowedImageUrl(url: String): Boolean {
+        return url.startsWith("https://") || url.startsWith("http://")
     }
 
     private fun decodeSampledBitmapFromFile(path: String, reqWidth: Int, reqHeight: Int): Bitmap? {

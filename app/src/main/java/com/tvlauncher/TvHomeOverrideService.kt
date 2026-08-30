@@ -35,8 +35,9 @@ class TvHomeOverrideService : AccessibilityService() {
             val info = serviceInfo ?: AccessibilityServiceInfo()
             info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
             info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
-            info.flags = AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS or
-                AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
+            // Least privilege: we only need the Home key filter + window-state events.
+            // No window-content retrieval is required for this feature.
+            info.flags = AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
             info.notificationTimeout = 50
             serviceInfo = info
         } catch (_: Exception) {
@@ -64,10 +65,9 @@ class TvHomeOverrideService : AccessibilityService() {
         if (!isHomeOverrideEnabled(this)) return false
 
         val keyCode = event.keyCode
-        val isHomeKey = keyCode == KeyEvent.KEYCODE_HOME ||
-            keyCode == KeyEvent.KEYCODE_TV_NETWORK ||
-            keyCode == KeyEvent.KEYCODE_GUIDE ||
-            keyCode == KeyEvent.KEYCODE_APP_SWITCH
+        // Only the Home key is intercepted. Other keys (TV Guide, TV/Input,
+        // App Switch / Recents) are left untouched so they keep their meaning.
+        val isHomeKey = keyCode == KeyEvent.KEYCODE_HOME
 
         if (isHomeKey) {
             if (event.action == KeyEvent.ACTION_DOWN) {

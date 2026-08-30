@@ -49,6 +49,8 @@
     <string name="enable_accessibility_prompt">Please enable "TV Launcher" under Accessibility Services to intercept the Home key.</string>
     <string name="suppress_stock_ram">Kill Stock Launcher Background RAM</string>
     <string name="suppress_stock_ram_desc">Frees 100MB+ RAM by stopping heavy OEM TV home screens</string>
+    <string name="suppress_stock_ram_confirm">This stops background processes of pre-installed TV launchers to free RAM. Launchers you installed yourself are never touched. You can turn it off anytime in About.</string>
+    <string name="enable">Enable</string>
     <string name="accessibility_service_description">Allows TV Launcher to detect the Home button on TV remotes and return to this launcher.</string>
 
     <!-- Wallpaper Strings -->

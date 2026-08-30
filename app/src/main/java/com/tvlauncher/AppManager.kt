@@ -343,7 +343,7 @@ class AppManager(private val context: Context) {
         private const val PREF_APPS_ORDER = "apps_order"
         private const val PREF_APPS_LEGACY = "apps"
         private const val PREF_SHORTCUTS_ENABLED = "shortcuts_enabled"
-        private const val ORDER_DELIMITER = ""
+        private const val ORDER_DELIMITER = "\u001E"
         private const val ICON_CACHE_MAX = 16
         private val instances = mutableListOf<WeakReference<AppManager>>()
 
