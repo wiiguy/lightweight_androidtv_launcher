@@ -2,6 +2,8 @@
 
 **Version 1.6.0** — A lightweight Android TV home launcher focused on low RAM use and a simple, customizable app grid. Built with AI assistance.
 
+> ⚠️ **Use at your own risk.** This app replaces your TV's home screen and includes optional system-level features (accessibility-based Home key override, stock launcher RAM killer, automatic updates). While the code is open source and audited, you install and use it entirely at your own risk — no warranty, express or implied.
+
 ## Features
 
 - **Up to 15 icons on home** — 14 apps plus a permanent **"+"** tile to add or change apps
