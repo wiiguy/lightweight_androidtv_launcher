@@ -317,13 +317,4 @@ object AppUpdateManager {
             null
         }
     }
-
-    enum class UpdateResult {
-        NoUpdate,
-        InstallStarted,
-        InstallPermissionNeeded,
-        DownloadFailed,
-        InvalidRelease,
-        Skipped
-    }
 }

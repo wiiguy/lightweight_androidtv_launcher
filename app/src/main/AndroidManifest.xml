@@ -62,13 +62,6 @@
             android:screenOrientation="landscape"
             android:theme="@style/Theme.TVLauncher" />
 
-        <activity
-            android:name=".UpdatePromptActivity"
-            android:exported="false"
-            android:excludeFromRecents="true"
-            android:screenOrientation="landscape"
-            android:theme="@style/Theme.TVLauncher" />
-
         <service
             android:name=".TvHomeOverrideService"
             android:exported="true"

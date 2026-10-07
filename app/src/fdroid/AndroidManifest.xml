@@ -2,16 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- F-Droid build: no in-app self-updater, so this permission is not needed. -->
+    <!-- F-Droid build: no in-app self-updater, so this permission is not needed.
+         The updater classes themselves live in the github source set. -->
     <uses-permission
         android:name="android.permission.REQUEST_INSTALL_PACKAGES"
         tools:node="remove" />
-
-    <application>
-        <!-- Update prompt activity does not exist in the F-Droid build. -->
-        <activity
-            android:name=".UpdatePromptActivity"
-            tools:node="remove" />
-    </application>
 
 </manifest>

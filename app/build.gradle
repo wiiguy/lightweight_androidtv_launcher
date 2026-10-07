@@ -11,8 +11,8 @@ android {
         applicationId "com.tvlauncher"
         minSdk 21
         targetSdk 34
-        versionCode 10601
-        versionName "1.6.1"
+        versionCode 10602
+        versionName "1.6.2"
     }
 
     flavorDimensions "store"
@@ -82,7 +82,11 @@ dependencies {
     implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.recyclerview:recyclerview:1.3.2'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.work:work-runtime-ktx:2.9.0'
+    // WorkManager is only used by the in-app updater, which exists in the github
+    // flavor only. Keeping it out of the fdroid flavor also removes the library's
+    // merged permissions (WAKE_LOCK, ACCESS_NETWORK_STATE, RECEIVE_BOOT_COMPLETED,
+    // FOREGROUND_SERVICE), its BOOT_COMPLETED receiver and startup initializer.
+    githubImplementation 'androidx.work:work-runtime-ktx:2.9.0'
 
     testImplementation 'junit:junit:4.13.2'
 }

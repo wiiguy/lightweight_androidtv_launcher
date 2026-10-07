@@ -112,3 +112,7 @@ Desktop.ini
 # Local push scripts (contain sensitive tokens)
 push.sh
 push-with-token.sh
+
+# Local agent notes (never commit)
+F-DROID-NOTES.md
+NOTES.md

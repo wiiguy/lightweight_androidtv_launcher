@@ -7,7 +7,7 @@ class TvLauncherApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         if (BuildConfig.UPDATES_ENABLED) {
-            AppUpdateManager.scheduleWeeklyCheck(this)
+            UpdaterBridge.scheduleWeeklyCheck(this)
         }
     }
 

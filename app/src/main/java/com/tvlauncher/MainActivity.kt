@@ -414,14 +414,14 @@ class MainActivity : AppCompatActivity() {
             // F-Droid build: updates are not available here, hide the entire card.
             cardAutoUpdate.visibility = View.GONE
         } else {
-            autoUpdateSwitch.isChecked = AppUpdateManager.isAutoUpdateEnabled(this)
+            autoUpdateSwitch.isChecked = UpdaterBridge.isAutoUpdateEnabled(this)
 
             cardAutoUpdate.setOnClickListener {
                 autoUpdateSwitch.toggle()
             }
 
             autoUpdateSwitch.setOnCheckedChangeListener { _, isChecked ->
-                AppUpdateManager.setAutoUpdateEnabled(this, isChecked)
+                UpdaterBridge.setAutoUpdateEnabled(this, isChecked)
                 val hint = if (isChecked) R.string.update_auto_on else R.string.update_auto_off
                 Toast.makeText(this, hint, Toast.LENGTH_SHORT).show()
             }
@@ -462,19 +462,19 @@ class MainActivity : AppCompatActivity() {
     private fun checkForUpdatesManually() {
         Toast.makeText(this, R.string.update_checking, Toast.LENGTH_SHORT).show()
         Thread {
-            val result = AppUpdateManager.checkDownloadAndInstall(
+            val result = UpdaterBridge.checkDownloadAndInstall(
                 applicationContext,
                 ignoreAutoUpdateSetting = true
             )
             runOnUiThread {
                 val message = when (result) {
-                    AppUpdateManager.UpdateResult.NoUpdate -> getString(R.string.update_none)
-                    AppUpdateManager.UpdateResult.InstallStarted -> getString(R.string.update_ready)
-                    AppUpdateManager.UpdateResult.InstallPermissionNeeded ->
+                    UpdateResult.NoUpdate -> getString(R.string.update_none)
+                    UpdateResult.InstallStarted -> getString(R.string.update_ready)
+                    UpdateResult.InstallPermissionNeeded ->
                         getString(R.string.update_permission_needed)
-                    AppUpdateManager.UpdateResult.DownloadFailed -> getString(R.string.update_failed)
-                    AppUpdateManager.UpdateResult.InvalidRelease -> getString(R.string.update_invalid_release)
-                    AppUpdateManager.UpdateResult.Skipped -> getString(R.string.update_disabled)
+                    UpdateResult.DownloadFailed -> getString(R.string.update_failed)
+                    UpdateResult.InvalidRelease -> getString(R.string.update_invalid_release)
+                    UpdateResult.Skipped -> getString(R.string.update_disabled)
                 }
                 Toast.makeText(this, message, Toast.LENGTH_LONG).show()
             }

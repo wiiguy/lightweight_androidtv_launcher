@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- GitHub build only: prompts the user to install a downloaded update.
+         This activity is not present in the F-Droid build. -->
+    <application>
+        <activity
+            android:name=".UpdatePromptActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.TVLauncher" />
+    </application>
+
+</manifest>

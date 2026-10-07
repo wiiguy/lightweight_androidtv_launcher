@@ -1,0 +1,3 @@
+* F-Droid build no longer includes the in-app updater: WorkManager and its permissions (WAKE_LOCK, ACCESS_NETWORK_STATE, RECEIVE_BOOT_COMPLETED, FOREGROUND_SERVICE) are gone
+* Updater code (GitHub auto-update, APK install prompt) is only compiled into the GitHub build
+* F-Droid screenshots moved to the tvScreenshots fastlane directory
