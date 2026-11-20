@@ -17,7 +17,7 @@ data class AppInfo(
     private var appManager: AppManager? = null,
     val shortcutId: String? = null,
     val shortcutLabel: String? = null,
-    val shortcutIcon: Drawable? = null
+    val shortcutIconLoader: (() -> Drawable?)? = null
 ) {
     val isShortcut: Boolean
         get() = shortcutId != null
@@ -38,7 +38,8 @@ data class AppInfo(
                 icon = cachedIcon
             } else {
                 try {
-                    val loaded = shortcutIcon ?: packageManager.getApplicationIcon(packageName)
+                    val loaded = shortcutIconLoader?.invoke()
+                        ?: packageManager.getApplicationIcon(packageName)
                     icon = if (iconSizePx > 0) {
                         renderRoundedIcon(loaded, iconSizePx)
                     } else {

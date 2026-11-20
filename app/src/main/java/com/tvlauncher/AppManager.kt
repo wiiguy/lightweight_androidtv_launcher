@@ -285,7 +285,8 @@ class AppManager(private val context: Context) {
             packageName = `package`,
             appName = appName,
             shortcutId = id,
-            shortcutLabel = shortLabel?.toString() ?: longLabel?.toString()
+            shortcutLabel = ShortcutHelper.labelOf(this),
+            shortcutIconLoader = ShortcutHelper.iconLoaderFor(context, this)
         )
     }
 

@@ -6,6 +6,7 @@ import android.content.pm.LauncherApps
 import android.content.pm.PackageManager
 import android.content.pm.ShortcutInfo
 import android.annotation.SuppressLint
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Process
 import androidx.annotation.RequiresApi
@@ -150,12 +151,38 @@ object ShortcutHelper {
                         packageName = packageName,
                         appName = packageName,
                         shortcutId = shortcut.id,
-                        shortcutLabel = shortcut.shortLabel?.toString() ?: shortcut.longLabel?.toString()
+                        shortcutLabel = labelOf(shortcut),
+                        shortcutIconLoader = iconLoaderFor(context, shortcut)
                     )
                 )
             }
         }
         return results
+    }
+
+    @RequiresApi(Build.VERSION_CODES.N_MR1)
+    fun labelOf(shortcut: ShortcutInfo): String? {
+        return listOf(shortcut.shortLabel, shortcut.longLabel)
+            .firstOrNull { !it.isNullOrBlank() }
+            ?.toString()
+    }
+
+    // The loader yields null on failure; AppInfo then falls back to the app icon.
+    @RequiresApi(Build.VERSION_CODES.N_MR1)
+    fun iconLoaderFor(context: Context, shortcut: ShortcutInfo): () -> Drawable? {
+        val appContext = context.applicationContext
+        return {
+            try {
+                val launcherApps = appContext.getSystemService(Context.LAUNCHER_APPS_SERVICE)
+                    as? LauncherApps
+                launcherApps?.getShortcutIconDrawable(
+                    shortcut,
+                    appContext.resources.displayMetrics.densityDpi
+                )
+            } catch (_: Exception) {
+                null
+            }
+        }
     }
 
     fun launchApp(context: Context, packageName: String) {
