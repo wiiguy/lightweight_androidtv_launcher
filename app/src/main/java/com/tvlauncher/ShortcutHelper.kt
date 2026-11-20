@@ -11,9 +11,9 @@ import android.os.Process
 import androidx.annotation.RequiresApi
 
 object ShortcutHelper {
-    private const val FLAG_MATCH_MANIFEST = 1
-    private const val FLAG_MATCH_DYNAMIC = 1 shl 1
-    private const val FLAG_MATCH_PINNED = 1 shl 2
+    private const val FLAG_MATCH_MANIFEST = LauncherApps.ShortcutQuery.FLAG_MATCH_MANIFEST
+    private const val FLAG_MATCH_DYNAMIC = LauncherApps.ShortcutQuery.FLAG_MATCH_DYNAMIC
+    private const val FLAG_MATCH_PINNED = LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED
 
     private val shortcutFlags: Int =
         FLAG_MATCH_DYNAMIC or FLAG_MATCH_PINNED or FLAG_MATCH_MANIFEST
