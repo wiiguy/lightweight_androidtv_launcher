@@ -2,6 +2,7 @@ package com.tvlauncher
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
+import android.content.pm.LauncherApps
 import android.content.pm.PackageManager
 import android.content.pm.ShortcutInfo
 import android.os.Build
@@ -232,6 +233,9 @@ class AppManager(private val context: Context) {
                 appInfo.setAppManager(this)
                 orderedResults.add(appInfo)
                 validIds.add(normalized)
+            } else if (decoded.shortcutId != null && !hasShortcutHostPermission()) {
+                // Shortcuts can't be looked up right now; keep the id instead of dropping it.
+                validIds.add(normalized)
             }
         }
 
@@ -268,6 +272,19 @@ class AppManager(private val context: Context) {
             ?.firstOrNull { it.id == shortcutId }
             ?: return null
         return shortcut.toAppInfo(appName)
+    }
+
+    private fun hasShortcutHostPermission(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N_MR1) {
+            return false
+        }
+        val launcherApps = context.getSystemService(Context.LAUNCHER_APPS_SERVICE)
+            as? LauncherApps ?: return false
+        return try {
+            launcherApps.hasShortcutHostPermission()
+        } catch (_: Exception) {
+            false
+        }
     }
 
     fun onTrimMemory(level: Int) {
