@@ -6,14 +6,15 @@ import android.content.pm.LauncherApps
 import android.content.pm.PackageManager
 import android.content.pm.ShortcutInfo
 import android.annotation.SuppressLint
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Process
 import androidx.annotation.RequiresApi
 
 object ShortcutHelper {
-    private const val FLAG_MATCH_MANIFEST = 1
-    private const val FLAG_MATCH_DYNAMIC = 1 shl 1
-    private const val FLAG_MATCH_PINNED = 1 shl 2
+    private const val FLAG_MATCH_MANIFEST = LauncherApps.ShortcutQuery.FLAG_MATCH_MANIFEST
+    private const val FLAG_MATCH_DYNAMIC = LauncherApps.ShortcutQuery.FLAG_MATCH_DYNAMIC
+    private const val FLAG_MATCH_PINNED = LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED
 
     private val shortcutFlags: Int =
         FLAG_MATCH_DYNAMIC or FLAG_MATCH_PINNED or FLAG_MATCH_MANIFEST
@@ -150,12 +151,38 @@ object ShortcutHelper {
                         packageName = packageName,
                         appName = packageName,
                         shortcutId = shortcut.id,
-                        shortcutLabel = shortcut.shortLabel?.toString() ?: shortcut.longLabel?.toString()
+                        shortcutLabel = labelOf(shortcut),
+                        shortcutIconLoader = iconLoaderFor(context, shortcut)
                     )
                 )
             }
         }
         return results
+    }
+
+    @RequiresApi(Build.VERSION_CODES.N_MR1)
+    fun labelOf(shortcut: ShortcutInfo): String? {
+        return listOf(shortcut.shortLabel, shortcut.longLabel)
+            .firstOrNull { !it.isNullOrBlank() }
+            ?.toString()
+    }
+
+    // The loader yields null on failure; AppInfo then falls back to the app icon.
+    @RequiresApi(Build.VERSION_CODES.N_MR1)
+    fun iconLoaderFor(context: Context, shortcut: ShortcutInfo): () -> Drawable? {
+        val appContext = context.applicationContext
+        return {
+            try {
+                val launcherApps = appContext.getSystemService(Context.LAUNCHER_APPS_SERVICE)
+                    as? LauncherApps
+                launcherApps?.getShortcutIconDrawable(
+                    shortcut,
+                    appContext.resources.displayMetrics.densityDpi
+                )
+            } catch (_: Exception) {
+                null
+            }
+        }
     }
 
     fun launchApp(context: Context, packageName: String) {
